@@ -2,17 +2,13 @@ package com.book.book.controller;
 // 책 추천 및 조회
 
 import com.book.book.dto.BookDto;
-import com.book.book.dto.TbBookDto;
-import com.book.book.entity.TbBook;
 import com.book.book.entity.TbBookKeyword;
 import com.book.book.entity.TbNewsKeyword;
 import com.book.book.entity.TbRecommend;
 import com.book.book.repository.TbBookKeywordRepository;
-import com.book.book.repository.TbBookRepository;
 import com.book.book.repository.TbNewsKeywordRepository;
 import com.book.book.service.TbRecommendService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
