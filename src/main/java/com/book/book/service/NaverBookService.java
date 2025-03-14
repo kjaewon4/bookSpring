@@ -26,7 +26,7 @@ public class NaverBookService {
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/book_adv.xml")
-                        .queryParam("isbn", query)
+                        .queryParam("d_isbn", query)
                         .queryParam("display", 10)
                         .queryParam("start", 1)
                         .queryParam("sort", "sim")

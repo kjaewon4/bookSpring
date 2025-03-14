@@ -33,7 +33,7 @@ public class TbBook {
     private String bookImg;
 
 
-    @Column(name = "books_description")
+    @Column(name = "books_description", columnDefinition = "TEXT")
     @Lob // 대용량 텍스트 데이터임을 명시
     private String bookDescription;
 
@@ -45,4 +45,12 @@ public class TbBook {
     @JsonManagedReference  // 직렬화의 주체로 설정
     private List<TbBookKeyword> keywords;
 
+    public TbBook(String title, String image, String author, String publisher, String isbn, String description) {
+        this.bookTitle = title;
+        this.bookImg = image;
+        this.bookAuthor = author;
+        this.bookPublisher = publisher;
+        this.bookIsbn = isbn;
+        this.bookDescription = description;
+    }
 }
