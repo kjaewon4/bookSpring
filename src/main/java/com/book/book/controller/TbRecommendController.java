@@ -96,12 +96,12 @@ public class TbRecommendController {
         }
 
         // 4. booksKeywordId를 기준으로 booksIsbn 조회
-        List<Long> booksKeywodsIds = recommendations.stream()
+        List<Long> booksKeywordsIds = recommendations.stream()
                 .map(rec -> rec.getBookKeyword().getBookKeywordId())
                 .distinct()
                 .collect(Collectors.toList());
 
-        List<TbBookKeyword> bookKeywords = tbBookKeywordRepository.findByBooksKeywordIdIn(booksKeywodsIds);
+        List<TbBookKeyword> bookKeywords = tbBookKeywordRepository.findByBookKeywordIdIn(booksKeywordsIds);
         if(bookKeywords == null || bookKeywords.isEmpty()) {
             return ResponseEntity.notFound().build();
         }

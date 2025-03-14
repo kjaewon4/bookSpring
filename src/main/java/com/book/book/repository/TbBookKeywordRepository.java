@@ -10,6 +10,6 @@ import java.util.List;
 public interface TbBookKeywordRepository extends JpaRepository<TbBookKeyword, Long> {
     List<TbBookKeyword> findByBookKeyword(String bookKeyword);
 
-    List<TbBookKeyword> findByBooksKeywordIdIn(List<Long> booksKeywordIds);
+    List<TbBookKeyword> findByBookKeywordIdIn(List<Long> bookKeywordIds);
 
 }
