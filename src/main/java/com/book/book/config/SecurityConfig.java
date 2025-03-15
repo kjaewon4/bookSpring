@@ -54,8 +54,7 @@ public class SecurityConfig {
                 )
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))) // 인증 실패 시 401 응답
-                .logout(logout -> logout.logoutUrl("/logout")); // 로그아웃 설정
-
+                .logout(AbstractHttpConfigurer::disable); // 기본 로그아웃 처리 비활성화 (중요!)
         // JWT 필터 적용 (BUT /login, /signup 요청은 제외)
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

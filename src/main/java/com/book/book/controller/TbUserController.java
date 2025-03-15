@@ -60,13 +60,13 @@ public class TbUserController {
             jwtCookie.setMaxAge(60 * 60 * 24); // 쿠키 만료 시간 (1일)
             response.addCookie(jwtCookie);
 
-            Cookie userUuidCookie = new Cookie("userUuid", data.get("userUuid"));
-            userUuidCookie.setHttpOnly(true);
-            userUuidCookie.setPath("/");
-            userUuidCookie.setSecure(false);  // HTTP에서도 전송되도록
-            userUuidCookie.setMaxAge(60 * 60 * 24); // 쿠키 만료 시간 (1일)
-            response.addCookie(userUuidCookie);
-            response.setHeader("Set-Cookie", "userUuid=" + data.get("userUuid") + "; Path=/; HttpOnly; SameSite=Lax; Secure=false");
+//            Cookie userUuidCookie = new Cookie("userUuid", data.get("userUuid"));
+//            userUuidCookie.setHttpOnly(true);
+//            userUuidCookie.setPath("/");
+//            userUuidCookie.setSecure(false);  // HTTP에서도 전송되도록
+//            userUuidCookie.setMaxAge(60 * 60 * 24); // 쿠키 만료 시간 (1일)
+//            response.addCookie(userUuidCookie);
+//            response.setHeader("Set-Cookie", "userUuid=" + data.get("userUuid") + "; Path=/; HttpOnly; SameSite=Lax; Secure=false");
             response.setHeader("Set-Cookie", "jwt=" + jwt + "; Path=/; HttpOnly; SameSite=Lax; Secure=false");
 
 
@@ -85,22 +85,14 @@ public class TbUserController {
     }
 
     @Operation(summary = "로그아웃", description = "현재 사용자의 세션을 종료합니다.")
-    @PostMapping("/logout")
-    public ResponseEntity<Map<String, String>> logout(HttpSession session, HttpServletResponse response) {
-        session.invalidate(); // 세션 만료 (로그아웃 처리)
-
-        // 쿠키 삭제 (JWT, userUuid)
+    @PostMapping("/logout") // ✅ GET → POST 변경
+    public ResponseEntity<Map<String, String>> logout(HttpServletResponse response) {
+        // JWT 쿠키 삭제 (HttpOnly라서 JS에서 삭제 불가능 → 서버에서 직접 만료 처리)
         Cookie jwtCookie = new Cookie("jwt", null);
         jwtCookie.setPath("/");
         jwtCookie.setHttpOnly(true);
         jwtCookie.setMaxAge(0);
         response.addCookie(jwtCookie);
-
-        Cookie userUuidCookie = new Cookie("userUuid", null);
-        userUuidCookie.setPath("/");
-        userUuidCookie.setHttpOnly(true);
-        userUuidCookie.setMaxAge(0);
-        response.addCookie(userUuidCookie);
 
         return ResponseEntity.ok(Map.of("message", "로그아웃 성공"));
     }
