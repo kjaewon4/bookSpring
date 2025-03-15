@@ -1,5 +1,6 @@
 package com.book.book.controller;
 
+import com.book.book.dto.BookDto;
 import com.book.book.dto.BookWithKeywordsDTO;
 import com.book.book.dto.TbBookStoreDto;
 import com.book.book.entity.*;
@@ -7,6 +8,7 @@ import com.book.book.repository.TbBookRepository;
 import com.book.book.service.AuthenticationService;
 import com.book.book.service.TbBookService;
 import com.book.book.service.TbBookStoreService;
+import com.book.book.service.TbRecommendService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -31,11 +34,20 @@ public class TbBookController {
     private final TbBookService tbBookService;
     private final TbBookRepository tbBookRepository;
     private final TbBookStoreService tbBookStoreService;
+    private final TbRecommendService tbRecommendService;
     private final AuthenticationService authenticationService;
 
-    @Operation(summary = "메인페이지", description = "메인페이지")
+    @Operation(summary = "메인페이지", description = "오늘 날짜의 뉴스 키워드 기반 도서 추천")
     @GetMapping("/")
-    public void home(HttpServletRequest request) {
+    public  ResponseEntity<?> home(HttpServletRequest request) {
+        LocalDate today = LocalDate.now(); // 오늘 날짜 가져오기
+        List<BookDto> books = tbRecommendService.getRecommendedBooksByDate(today); // 비정적 메서드 호출
+
+        if (books.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(books);
 
 //        System.out.println(auth.getName());
 

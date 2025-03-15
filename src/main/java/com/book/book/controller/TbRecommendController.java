@@ -70,58 +70,64 @@ public class TbRecommendController {
     @Operation(summary = "해당 날짜에 등록된 뉴스 키워드 기반 도서 추천", description = "해당 날짜에 등록된 뉴스 키워드 기반 도서 추천")
     @GetMapping("/news/date/{date}")
     public ResponseEntity<?> recommendBooksByDate(@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<BookDto> books = tbRecommendService.getRecommendedBooksByDate(date);
 
-        // tb_newsKeyword → tb_recommend → tb_booksKeyword → tb_books 순으로 참조
-
-        // 1. tb_newsKeyword 테이블에서 해당 날짜에 등록된 뉴스 키워드(TbNewsKeyword)를 조회
-        List<TbNewsKeyword> newsList = tbNewsKeywordRepository.findAllByNewsDate(date);
-        // 뽑은 newsList 객체 별로 newsId 뽑고
-        // 뽑은 newsId에 매핑되는 tb_recommend 찾아서 bookkeyordId 착기
-        // bookKetwordId로 bookkeyword 테이블에서 isbn 찾기
-        // isbn으로 book 정보 가져오기 BookDto쓰면 될듯
-
-        if (newsList == null || newsList.isEmpty()) {
+        if (books.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        // 2. 뉴스 키워드에서 newsId 리스트 추출
-        List<Long> newsId = newsList.stream()
-                .map(TbNewsKeyword::getNewsId)
-                .collect(Collectors.toList());
-
-        // 3. newsId를 기준으로 tb_recommed에서 booksKeywordId 조회
-        List<TbRecommend> recommendations = tbRecommendService.findByNewsId(newsId);
-        if(recommendations == null || recommendations.isEmpty()){
-            return ResponseEntity.notFound().build();
-        }
-
-        // 4. booksKeywordId를 기준으로 booksIsbn 조회
-        List<Long> booksKeywordsIds = recommendations.stream()
-                .map(rec -> rec.getBookKeyword().getBookKeywordId())
-                .distinct()
-                .collect(Collectors.toList());
-
-        List<TbBookKeyword> bookKeywords = tbBookKeywordRepository.findByBookKeywordIdIn(booksKeywordsIds);
-        if(bookKeywords == null || bookKeywords.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        // 5. bookIsbn 기준으로 도서  정보를 조회하고 DTO로 변환
-        List<BookDto> books = bookKeywords.stream()
-                .map(TbBookKeyword::getBook)
-                .distinct()
-                .map(book -> new BookDto (
-                    book.getBookIsbn(),
-                    book.getBookTitle(),
-                    book.getBookPublisher(),
-                    book.getBookAuthor(),
-                    book.getBookImg(),
-                    book.getBookDescription(),
-                    book.getBookCategory(),
-                    book.getKeywords().stream().map(TbBookKeyword::getBookKeyword).collect(Collectors.toList())
-                ))
-                .collect(Collectors.toList());
 
         return ResponseEntity.ok(books);
+        // tb_newsKeyword → tb_recommend → tb_booksKeyword → tb_books 순으로 참조
+
+//        // 1. tb_newsKeyword 테이블에서 해당 날짜에 등록된 뉴스 키워드(TbNewsKeyword)를 조회
+//        List<TbNewsKeyword> newsList = tbNewsKeywordRepository.findAllByNewsDate(date);
+//        // 뽑은 newsList 객체 별로 newsId 뽑고
+//        // 뽑은 newsId에 매핑되는 tb_recommend 찾아서 bookkeyordId 착기
+//        // bookKetwordId로 bookkeyword 테이블에서 isbn 찾기
+//        // isbn으로 book 정보 가져오기 BookDto쓰면 될듯
+//
+//        if (newsList == null || newsList.isEmpty()) {
+//            return ResponseEntity.notFound().build();
+//        }
+//        // 2. 뉴스 키워드에서 newsId 리스트 추출
+//        List<Long> newsId = newsList.stream()
+//                .map(TbNewsKeyword::getNewsId)
+//                .collect(Collectors.toList());
+//
+//        // 3. newsId를 기준으로 tb_recommed에서 booksKeywordId 조회
+//        List<TbRecommend> recommendations = tbRecommendService.findByNewsId(newsId);
+//        if(recommendations == null || recommendations.isEmpty()){
+//            return ResponseEntity.notFound().build();
+//        }
+//
+//        // 4. booksKeywordId를 기준으로 booksIsbn 조회
+//        List<Long> booksKeywordsIds = recommendations.stream()
+//                .map(rec -> rec.getBookKeyword().getBookKeywordId())
+//                .distinct()
+//                .collect(Collectors.toList());
+//
+//        List<TbBookKeyword> bookKeywords = tbBookKeywordRepository.findByBookKeywordIdIn(booksKeywordsIds);
+//        if(bookKeywords == null || bookKeywords.isEmpty()) {
+//            return ResponseEntity.notFound().build();
+//        }
+//
+//        // 5. bookIsbn 기준으로 도서  정보를 조회하고 DTO로 변환
+//        List<BookDto> books = bookKeywords.stream()
+//                .map(TbBookKeyword::getBook)
+//                .distinct()
+//                .map(book -> new BookDto (
+//                    book.getBookIsbn(),
+//                    book.getBookTitle(),
+//                    book.getBookPublisher(),
+//                    book.getBookAuthor(),
+//                    book.getBookImg(),
+//                    book.getBookDescription(),
+//                    book.getBookCategory(),
+//                    book.getKeywords().stream().map(TbBookKeyword::getBookKeyword).collect(Collectors.toList())
+//                ))
+//                .collect(Collectors.toList());
+//
+//        return ResponseEntity.ok(books);
     }
 
 }
