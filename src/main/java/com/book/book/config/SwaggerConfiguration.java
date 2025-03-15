@@ -12,7 +12,7 @@ public class SwaggerConfiguration {
     public GroupedOpenApi publicApi() {
         return GroupedOpenApi.builder()
                 .group("public")
-                .packagesToScan("com.springboot.book")  // Swagger가 스캔할 패키지 설정
+                .packagesToScan("com.book.book")  // Swagger가 스캔할 패키지 설정
                 .pathsToMatch("/**")  // 모든 경로에 대해 Swagger 문서화
                 .build();
     }

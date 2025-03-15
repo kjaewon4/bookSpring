@@ -4,6 +4,7 @@ import com.book.book.dto.CustomUser;
 import com.book.book.entity.TbUser;
 import com.book.book.jwt.JwtUtil;
 import com.book.book.repository.TbUserRepository;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,7 +32,7 @@ public class TbUserController {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
-
+    @Operation(summary = "로그인", description = "로그인")
     @ResponseBody
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> data, HttpServletResponse response, HttpSession session) {
@@ -81,6 +82,7 @@ public class TbUserController {
         }
     }
 
+    @Operation(summary = "로그아웃", description = "로그아웃")
     @ResponseBody
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout(HttpSession session) {
@@ -167,6 +169,7 @@ public class TbUserController {
 //        return "";
 //    }
 
+    @Operation(summary = "회원가입", description = "회원가입")
     @PostMapping("/signup")
     public String signup(@RequestBody TbUser tbUser) {
         TbUser User = new TbUser();

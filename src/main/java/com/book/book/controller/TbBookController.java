@@ -7,6 +7,7 @@ import com.book.book.repository.TbBookRepository;
 import com.book.book.service.AuthenticationService;
 import com.book.book.service.TbBookService;
 import com.book.book.service.TbBookStoreService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ public class TbBookController {
     private final TbBookStoreService tbBookStoreService;
     private final AuthenticationService authenticationService;
 
+    @Operation(summary = "메인페이지", description = "메인페이지")
     @GetMapping("/")
     public void home(HttpServletRequest request) {
 
@@ -53,6 +55,7 @@ public class TbBookController {
 
     // http://localhost:8080/books/search?search=검색어, 도서 검색(제목) - 검색창 사용
     // full text index (n-gram parser 이용)쓸거임
+    @Operation(summary = "도서 검색(제목) - 검색창 사용", description = "도서 검색(제목) - 검색창 사용")
     @GetMapping("books/search")
     public ResponseEntity<?> search(@RequestParam(name = "search") String search) {
         System.out.println("검색어 : " + search);
@@ -81,6 +84,7 @@ public class TbBookController {
 
     // http://localhost:8080/books/category/소설
     // http://localhost:8080/books/category/{category}, 도서 카테고리별 조회 (에세이, 문학, 시...) - 버튼 사용
+    @Operation(summary = "도서 카테고리별 조회 (에세이, 문학, 시...) - 버튼 사용", description = "도서 카테고리별 조회 (에세이, 문학, 시...) - 버튼 사용")
     @GetMapping("books/category/{category}")
     public ResponseEntity<?> searchByCategory(@PathVariable(name = "category") String category) {
         // tb_books 테이블에서 카테고리 일치하는거 다 가져와
@@ -99,6 +103,7 @@ public class TbBookController {
     // http://localhost:8080/book/9788936434595
     // 특정 ISBN의 도서 상세 정보 조회
     // 상세페이지에 키워드랑 알라딘 포함
+    @Operation(summary = "특정 ISBN의 도서 상세 정보 조회", description = "특정 ISBN의 도서 상세 정보 조회")
     @GetMapping("book/{isbn}")
     public Mono<ResponseEntity<BookWithKeywordsDTO>> getBookWithKeywords(@PathVariable(name= "isbn") String isbn) {
         TbBook tbBook = tbBookService.getBookWithKeywords(isbn);

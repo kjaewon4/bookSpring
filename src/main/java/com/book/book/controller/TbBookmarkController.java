@@ -7,6 +7,7 @@ import com.book.book.repository.TbBookRepository;
 import com.book.book.repository.TbBookmarkRepository;
 import com.book.book.repository.TbUserRepository;
 import com.book.book.service.TbBookmarkService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/bookmarks")
@@ -29,6 +31,7 @@ public class TbBookmarkController {
     private final TbBookmarkRepository tbBookmarkRepository;
     private final TbBookmarkService tbBookmarkService;
 
+    @Operation(summary = "isbn으로 북마크", description = "isbn으로 북마크")
     @PostMapping("{isbn}")
     public ResponseEntity addBookMark(@PathVariable("isbn") String isbn, @RequestBody Map<String, String> requestBody) {
         String userUuid = requestBody.get("userUuid");
@@ -74,6 +77,7 @@ public class TbBookmarkController {
     }
 
     // 북마크 리스트
+    @Operation(summary = "유저별 북마크 조회", description = "유저별 북마크 조회")
     @GetMapping("")
     public ResponseEntity<?> getBookmarks(@RequestParam String uuid) {
 
@@ -101,6 +105,7 @@ public class TbBookmarkController {
         }
     }
     // 북마크 삭제
+    @Operation(summary = "유저별 북마크 삭제", description = "유저별 북마크 삭제")
     @Transactional
     @DeleteMapping("{isbn}")
     public ResponseEntity<?> deleteBookMark(@PathVariable("isbn") String isbn, @RequestBody Map<String, String> requestBody) {
