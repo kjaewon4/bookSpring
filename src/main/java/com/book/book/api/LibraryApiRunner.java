@@ -23,7 +23,7 @@ public class LibraryApiRunner implements CommandLineRunner {
                 .doOnNext(recomisbnList -> {
                     if (!recomisbnList.isEmpty()) {
                         System.out.println("📚 추천된 ISBN 목록:");
-                        recomisbnList.forEach(isbn -> System.out.println(" - " + isbn));
+//                        recomisbnList.forEach(isbn -> System.out.println(" - " + isbn));
                     } else {
                         System.out.println("❌ 추천된 ISBN이 없습니다.");
                     }

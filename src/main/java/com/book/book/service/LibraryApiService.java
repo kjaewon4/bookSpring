@@ -41,7 +41,7 @@ public class LibraryApiService {
                 .accept(MediaType.APPLICATION_XML)
                 .retrieve()
                 .bodyToMono(String.class)  // XML을 String으로 받음
-                .doOnNext(xmlResponse -> System.out.println("응답 받은 XML:\n" + xmlResponse))
+//                .doOnNext(xmlResponse -> System.out.println("응답 받은 XML:\n" + xmlResponse))
                 .flatMap(xmlResponse -> {
                     try {
                         LibraryApiDto parsedResponse = parseXml(xmlResponse);

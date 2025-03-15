@@ -14,14 +14,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
-
-
 
 
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")  // CORS 직접 지정
@@ -49,6 +46,11 @@ public class TbUserController {
 
             var jwt = JwtUtil.createToken(SecurityContextHolder.getContext().getAuthentication());
             System.out.println("Generated JWT: " + jwt);
+
+//            // **세션에 사용자 정보 저장**
+//            session.setAttribute("userUuid", data.get("userUuid")); // UUID 저장
+//            session.setAttribute("jwt", jwt); // JWT 저장
+//            session.setMaxInactiveInterval(60 * 60 * 24); // 세션 만료 시간 (1일)
 
             // JWT와 userUuid를 쿠키에 저장
             Cookie jwtCookie = new Cookie("jwt", jwt);
@@ -82,29 +84,60 @@ public class TbUserController {
         }
     }
 
-    @Operation(summary = "로그아웃", description = "로그아웃")
-    @ResponseBody
+    @Operation(summary = "로그아웃", description = "현재 사용자의 세션을 종료합니다.")
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, String>> logout(HttpSession session) {
-        // 세션 무효화
-        session.invalidate();
+    public ResponseEntity<Map<String, String>> logout(HttpSession session, HttpServletResponse response) {
+        session.invalidate(); // 세션 만료 (로그아웃 처리)
+
+        // 쿠키 삭제 (JWT, userUuid)
+        Cookie jwtCookie = new Cookie("jwt", null);
+        jwtCookie.setPath("/");
+        jwtCookie.setHttpOnly(true);
+        jwtCookie.setMaxAge(0);
+        response.addCookie(jwtCookie);
+
+        Cookie userUuidCookie = new Cookie("userUuid", null);
+        userUuidCookie.setPath("/");
+        userUuidCookie.setHttpOnly(true);
+        userUuidCookie.setMaxAge(0);
+        response.addCookie(userUuidCookie);
+
         return ResponseEntity.ok(Map.of("message", "로그아웃 성공"));
     }
 
-    // 서버 코드: 세션 상태를 확인하는 API
-    @ResponseBody
-    @GetMapping("/check-session")
-    public ResponseEntity<Map<String, Object>> checkSession(HttpSession session) {
-        // 세션에 저장된 사용자 정보 확인
-        Object authenticatedUser = session.getAttribute("authenticatedUser");
 
-        if (authenticatedUser != null) {
-            return ResponseEntity.ok(Map.of("user", authenticatedUser));
-        } else {
+    @Operation(summary = "세션 확인", description = "현재 로그인한 사용자 정보를 반환합니다.")
+    @GetMapping("/session")
+    public ResponseEntity<Map<String, String>> getSessionInfo(HttpSession session) {
+        String userUuid = (String) session.getAttribute("userUuid");
+        String jwt = (String) session.getAttribute("jwt");
+
+        if (userUuid == null || jwt == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "로그인 해주세요."));
+                    .body(Map.of("error", "세션이 만료되었거나 로그인되지 않았습니다."));
         }
+
+        return ResponseEntity.ok(Map.of(
+                "message", "세션 정보 조회 성공",
+                "userUuid", userUuid,
+                "token", jwt
+        ));
     }
+
+//    // 서버 코드: 세션 상태를 확인하는 API
+//    @ResponseBody
+//    @GetMapping("/check-session")
+//    public ResponseEntity<Map<String, Object>> checkSession(HttpSession session) {
+//        // 세션에 저장된 사용자 정보 확인
+//        Object authenticatedUser = session.getAttribute("authenticatedUser");
+//
+//        if (authenticatedUser != null) {
+//            return ResponseEntity.ok(Map.of("user", authenticatedUser));
+//        } else {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+//                    .body(Map.of("error", "로그인 해주세요."));
+//        }
+//    }
 
 
     // JWT 로그인

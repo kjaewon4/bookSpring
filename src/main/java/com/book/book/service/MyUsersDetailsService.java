@@ -37,9 +37,9 @@ public class MyUsersDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException(userUuid + "라는 아이디를 찾을 수 없습니다.");
         }
         var user = result.get();
-        System.out.println(user);
+        System.out.println("✅ DB에서 찾은 사용자: " + user);
 
-        //✅ 입력한 비밀번호와 DB의 암호화된 비밀번호 비교 테스트
+        // 입력한 비밀번호와 DB의 암호화된 비밀번호 비교 테스트
 
         // 직접 BCryptPasswordEncoder 객체를 생성
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -52,11 +52,13 @@ public class MyUsersDetailsService implements UserDetailsService {
         boolean isMatched = passwordEncoder.matches(입력된_비밀번호, user.getUserPassword());
         System.out.println("비밀번호 일치 여부: " + isMatched);
 
+        // 권한 추가 (Spring Security는 "ROLE_" 접두사를 권장)
         List<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("일반회원"));
+        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));  // 일반 회원 권한
 
         CustomUser customUser = new CustomUser(user.getUserUuid(), user.getUserPassword(), authorities);
         customUser.setUserNickname(user.getUserNickname());
+        System.out.println("✅ 생성된 CustomUser: " + customUser.getUserUuid());
 
         return customUser;
     }

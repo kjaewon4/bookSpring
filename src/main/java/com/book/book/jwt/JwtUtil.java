@@ -24,20 +24,25 @@ public class JwtUtil {
     // JWT 만들어주는 함수
     public static String createToken(Authentication auth){
         CustomUser customUser = (CustomUser) auth.getPrincipal();
+        System.out.println("createToken customUser.getUserUuid(): " + customUser.getUserUuid());
 
-        var authorities = auth.getAuthorities().stream().map(a -> a.getAuthority())
+        var authorities = auth.getAuthorities().stream()
+                .map(a -> a.getAuthority())
                 .collect(Collectors.joining(","));
 
 
         // .claim(이름, 값)으로 JWT에 데이터 추가 가능
         String jwt = Jwts.builder()
+                .subject(customUser.getUserUuid())  // subject 설정
                 .claim("userUuid", customUser.getUserUuid())
                 .claim("userNickname", customUser.getUserNickname())
-                .claim("authorities", authorities)
+                .claim("roles", authorities)
                 .issuedAt(new Date(System.currentTimeMillis()))  // 발행 일자
                 .expiration(new Date(System.currentTimeMillis() + 3600000))  // 유효기간 1시간(3600초)
                 .signWith(key)
                 .compact();
+
+        System.out.println("✅ createToken 생성된 JWT: " + jwt);
 
         return jwt;
     }

@@ -10,6 +10,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -43,28 +44,36 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
-
         http
-//                .cors(cors -> cors.disable())  // Spring Security의 CORS 설정 해제 (별도 설정 사용)
-                .csrf(csrf -> csrf.disable()) // CSRF 비활성화
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS 먼저 적용
+                .csrf(AbstractHttpConfigurer::disable) // CSRF 비활성화
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 비활성화
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/**"
-//                                "/login", "/signup"
-                        ).permitAll() // 로그인 및 회원가입 URL 허용
-                        .anyRequest().authenticated()) // 나머지 요청은 인증 필요
+                        .requestMatchers("/login", "/signup", "/swagger-ui/**").permitAll() // 로그인 & 회원가입은 인증 없이 허용
+                        .anyRequest().authenticated() // 나머지는 인증 필요
+                )
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))) // 인증 실패 시 401 응답
-                            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);  // 필터 체인에 추가
-//                .addFilterBefore(new JwtFilter(), ExceptionTranslationFilter.class); // JWT 필터 추가
+                .logout(logout -> logout.logoutUrl("/logout")); // 로그아웃 설정
 
-        http.logout(logout -> logout.logoutUrl("/logout"));
-
-
+        // JWT 필터 적용 (BUT /login, /signup 요청은 제외)
+        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.addAllowedOriginPattern("http://localhost:3000"); // 모든 도메인 허용
+        config.addAllowedMethod("*"); // 모든 HTTP 메서드 허용
+        config.addAllowedHeader("*"); // 모든 헤더 허용
+        config.setAllowCredentials(true); // 자격 증명 허용
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+
+        return source;
+    }
 //    @Bean
 //    public CorsConfigurationSource corsConfigurationSource() {
 //        CorsConfiguration configuration = new CorsConfiguration();
