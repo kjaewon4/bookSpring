@@ -2,7 +2,6 @@ package com.book.book.controller;
 
 import com.book.book.dto.BookDto;
 import com.book.book.dto.BookWithKeywordsDTO;
-import com.book.book.dto.TbBookStoreDto;
 import com.book.book.entity.*;
 import com.book.book.repository.TbBookRepository;
 import com.book.book.service.AuthenticationService;
@@ -12,20 +11,16 @@ import com.book.book.service.TbRecommendService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
+import io.swagger.v3.oas.annotations.Parameter;
+
 
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -67,7 +62,10 @@ public class TbBookController {
 
     // http://localhost:8080/books/search?search=검색어, 도서 검색(제목) - 검색창 사용
     // full text index (n-gram parser 이용)쓸거임
-    @Operation(summary = "도서 검색(제목) - 검색창 사용", description = "도서 검색(제목) - 검색창 사용")
+    @Operation(summary = "도서 검색(제목) - 검색창 사용",
+            description = "사용자가 입력한 키워드가 포함된 도서를 검색합니다. "
+            + "제목의 일부를 입력하면 해당 단어를 포함하는 도서를 반환합니다. "
+            + "예: '자바'를 입력하면 '자바의 정석', '모던 자바 인 액션' 등의 도서가 검색됩니다.")
     @GetMapping("books/search")
     public ResponseEntity<?> search(@RequestParam(name = "search") String search) {
         System.out.println("검색어 : " + search);
@@ -112,12 +110,14 @@ public class TbBookController {
 
     }
 
-    // http://localhost:8080/book/9788936434595
+    // http://localhost:8080/book/9788920930720
     // 특정 ISBN의 도서 상세 정보 조회
     // 상세페이지에 키워드랑 알라딘 포함
-    @Operation(summary = "특정 ISBN의 도서 상세 정보 조회", description = "특정 ISBN의 도서 상세 정보 조회")
+    @Operation(summary = "특정 ISBN의 도서 상세 정보 조회", description = "주어진 ISBN을 기반으로 책 정보를 검색합니다. (예: 9788920930720)")
     @GetMapping("book/{isbn}")
-    public Mono<ResponseEntity<BookWithKeywordsDTO>> getBookWithKeywords(@PathVariable(name= "isbn") String isbn) {
+    public Mono<ResponseEntity<BookWithKeywordsDTO>> getBookWithKeywords(
+            @Parameter(description = "검색할 책의 ISBN 번호", example = "9788920930720")
+            @PathVariable(name= "isbn") String isbn) {
         TbBook tbBook = tbBookService.getBookWithKeywords(isbn);
 
         BookWithKeywordsDTO bookWithKeywordsDTO = new BookWithKeywordsDTO(
