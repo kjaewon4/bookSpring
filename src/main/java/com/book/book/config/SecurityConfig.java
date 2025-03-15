@@ -49,14 +49,31 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // CSRF 비활성화
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 비활성화
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/signup", "/swagger-ui/**").permitAll() // 로그인 & 회원가입은 인증 없이 허용
+                        .requestMatchers( "/login",
+                                "/signup",
+                                "/favicon.ico",
+                                "/swagger-ui/**",  // ✅ Swagger UI 경로 허용
+                                "/v3/api-docs/**",  // ✅ OpenAPI 문서 허용
+                                "/swagger-resources/**", // ✅ Swagger 리소스 허용
+                                "/webjars/**"  // ✅ Swagger UI 리소스 허용
+                                ).permitAll() // 로그인 & 회원가입은 인증 없이 허용
                         .anyRequest().authenticated() // 나머지는 인증 필요
                 )
                 .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))) // 인증 실패 시 401 응답
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            String path = request.getRequestURI();
+                            if (path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs") || path.startsWith("/swagger-resources") || path.startsWith("/favicon.ico")) {
+                                response.setStatus(HttpServletResponse.SC_OK); // ✅ Swagger 요청은 200 OK로 응답
+                            } else {
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                            }
+                        })
+                )// 인증 실패 시 401 응답
                 .logout(AbstractHttpConfigurer::disable); // 기본 로그아웃 처리 비활성화 (중요!)
         // JWT 필터 적용 (BUT /login, /signup 요청은 제외)
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+
         return http.build();
     }
 
@@ -73,17 +90,4 @@ public class SecurityConfig {
 
         return source;
     }
-//    @Bean
-//    public CorsConfigurationSource corsConfigurationSource() {
-//        CorsConfiguration configuration = new CorsConfiguration();
-//        configuration.addAllowedOriginPattern("http://localhost:3000"); // 특정 도메인 허용
-//        configuration.addAllowedMethod("*"); // 허용할 메서드 지정
-//        configuration.addAllowedHeader("*"); // 모든 HTTP 헤더 허용
-//        configuration.setAllowCredentials(true); // 쿠키 전송 허용
-//
-//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//        source.registerCorsConfiguration("/**", configuration); // 모든 경로에 CORS 설정 적용
-//
-//        return source;
-//    }
 }

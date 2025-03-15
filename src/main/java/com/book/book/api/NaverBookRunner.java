@@ -60,7 +60,7 @@ public class NaverBookRunner implements CommandLineRunner {
                         );
 
                         tbBookRepository.save(book);
-//                        System.out.println("저장된 책: [" + recomisbn + "] - " + book.getBookTitle());
+                        System.out.println("저장된 책: [" + recomisbn + "] - " + book.getBookTitle());
                     });
                 } else {
                     System.out.println("Naver API에서 검색된 결과가 없습니다: " + recomisbn);

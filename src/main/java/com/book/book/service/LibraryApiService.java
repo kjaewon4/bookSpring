@@ -6,11 +6,15 @@ import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
 
 import java.io.StringReader;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -26,8 +30,18 @@ public class LibraryApiService {
     public LibraryApiService(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder
                 .baseUrl("https://nl.go.kr/NL/search/openApi")
-                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024))
+//                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024))
+                .clientConnector(new ReactorClientHttpConnector(HttpClient.create()
+                        .responseTimeout(Duration.ofSeconds(60))))
+                .exchangeStrategies(ExchangeStrategies.builder()
+                        .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(20 * 1024 * 1024)) // 20MB 설정
+                        .build())
                 .build();
+
+        //  .exchangeStrategies(ExchangeStrategies.builder()
+        //                        .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(20 * 1024 * 1024)) // 20MB 설정
+        //                        .build())
+        //                .build();
     }
 
     public Mono<List<String>> getRecomisbn() {
@@ -36,7 +50,7 @@ public class LibraryApiService {
                         .path("/saseoApi.do")
                         .queryParam("key", apiKey)
                         .queryParam("startRowNumApi", "1")
-                        .queryParam("endRowNumApi", "500")
+                        .queryParam("endRowNumApi", "1300")
                         .build())
                 .accept(MediaType.APPLICATION_XML)
                 .retrieve()
