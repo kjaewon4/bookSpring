@@ -7,6 +7,7 @@ import com.book.book.entity.TbRecommend;
 import com.book.book.repository.TbBookKeywordRepository;
 import com.book.book.repository.TbNewsKeywordRepository;
 import com.book.book.repository.TbRecommendRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +18,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 public class TbRecommendService {
-    private final TbRecommendRepository recommendRepository;
     private final TbRecommendRepository tbRecommendRepository;
     private final TbBookKeywordRepository tbBookKeywordRepository;
     private final TbNewsKeywordRepository tbNewsKeywordRepository;
@@ -34,45 +34,42 @@ public class TbRecommendService {
             return List.of();
         }
 
-        // 2. 뉴스 키워드에서 newsId 리스트 추출
-        List<Long> newsId = newsList.stream()
-                .map(TbNewsKeyword::getNewsId)
-                .collect(Collectors.toList());
-
-        // 3. newsId를 기준으로 추천 도서 매핑 조회
-        List<TbRecommend> recommendations = findByNewsId(newsId);
+        // 2. 조회된 뉴스 키워드들을 기준으로 TbRecommend 조회
+        // tbRecommendRepository에 아래와 같이 메서드 정의
+        // List<TbRecommend> findByNewsKeywordIn(List<TbNewsKeyword> newsKeywords);
+        List<TbRecommend> recommendations = tbRecommendRepository.findByNewsKeywordIn(newsList);
         if (recommendations == null || recommendations.isEmpty()) {
             return List.of();
         }
 
-        // 4. booksKeywordId 리스트 추출
-        List<Long> booksKeywordsIds = recommendations.stream()
-                .map(rec -> rec.getBookKeyword().getBookKeywordId())
-                .distinct()
+        // 3. TbRecommend 에서 연결된 TbBook 추출 -> 중복 제거 -> DTO 변환
+        List<BookDto> books = recommendations.stream()
+                .map(TbRecommend::getBook)
+                .distinct()  // TbBook의 equals/hashCode가 ISBN 기준으로 구현되어 있어야 함
+                .map(book -> {
+                    List<String> keywords = book.getKeywords().stream()
+                            .map(TbBookKeyword::getBookKeyword)
+                            .collect(Collectors.toList());
+                    return new BookDto(
+                            book.getBookIsbn(),
+                            book.getBookTitle(),
+                            book.getBookPublisher(),
+                            book.getBookAuthor(),
+                            book.getBookImg(),
+                            book.getBookDescription(),
+                            book.getBookCategory(),
+                            keywords
+                    );
+                })
                 .collect(Collectors.toList());
 
-        // 5. booksKeywordId를 기준으로 도서 ISBN 조회
-        List<TbBookKeyword> bookKeywords = tbBookKeywordRepository.findByBookKeywordIdIn(booksKeywordsIds);
-        if (bookKeywords == null || bookKeywords.isEmpty()) {
-            return List.of();
-        }
-
-        // 6. 도서 정보를 DTO로 변환 후 반환
-        return bookKeywords.stream()
-                .map(TbBookKeyword::getBook)
-                .distinct()
-                .map(book -> new BookDto(
-                        book.getBookIsbn(),
-                        book.getBookTitle(),
-                        book.getBookPublisher(),
-                        book.getBookAuthor(),
-                        book.getBookImg(),
-                        book.getBookDescription(),
-                        book.getBookCategory(),
-                        book.getKeywords().stream()
-                                .map(TbBookKeyword::getBookKeyword)
-                                .collect(Collectors.toList())
-                ))
-                .collect(Collectors.toList());
+        return books;
     }
+
+//    // 책 키워드랑  뉴스 키워드 매핑
+//    @Transactional
+//    public void createRecommendations() {
+//        // Native Query 한 방으로 매핑 레코드 생성
+//        tbRecommendRepository.insertAllRecommendations();
+//    }
 }

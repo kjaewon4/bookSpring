@@ -9,7 +9,7 @@ import java.util.List;
 @Entity
 @Setter
 @Getter
-@ToString(exclude = "keywords")
+@ToString(exclude = {"keywords"})
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true) // 키워드랑 매핑할 때 중복제거 하려고 넣은 거임
@@ -45,6 +45,11 @@ public class TbBook {
     @JsonManagedReference  // 직렬화의 주체로 설정
     private List<TbBookKeyword> keywords;
 
+    // TbBook과 TbRecommend(중간 엔티티) 간의 1:N 관계
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
+    private List<TbRecommend> recommendations;
+
+
     public TbBook(String title, String image, String author, String publisher, String isbn, String description) {
         this.bookTitle = title;
         this.bookImg = image;
@@ -53,4 +58,6 @@ public class TbBook {
         this.bookIsbn = isbn;
         this.bookDescription = description;
     }
+
+
 }

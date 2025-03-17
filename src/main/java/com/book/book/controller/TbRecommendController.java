@@ -7,6 +7,7 @@ import com.book.book.entity.TbNewsKeyword;
 import com.book.book.entity.TbRecommend;
 import com.book.book.repository.TbBookKeywordRepository;
 import com.book.book.repository.TbNewsKeywordRepository;
+import com.book.book.repository.TbRecommendRepository;
 import com.book.book.service.TbRecommendService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -26,28 +27,46 @@ public class TbRecommendController {
     private final TbRecommendService tbRecommendService;
     private final TbBookKeywordRepository tbBookKeywordRepository;
     private final TbNewsKeywordRepository tbNewsKeywordRepository;
+    private final TbRecommendRepository tbRecommendRepository;
+
+//    // 뉴스 키워드랑 책 키워드 매핑
+//    @PostMapping("/createRecommendations")
+//    public ResponseEntity<String> createRecommendations() {
+//        tbRecommendService.createRecommendations();
+//        return ResponseEntity.ok("뉴스 키워드랑 책 키워드 매핑 완료");
+//    }
 
     // http://localhost:8080/books/recommend/keyword/%EC%9D%B4%EB%B3%84
     // 뉴스 키워드 기반 도서 추천
     @Operation(summary = "뉴스 키워드 기반 도서 추천", description = "뉴스 키워드 기반 도서 추천")
     @GetMapping("/keyword/{keyword}")
     public ResponseEntity<?> recommendBooksByKeyword(@PathVariable String keyword) {
-        // 키워드와 일치하는 모든 TbBookKeyword 엔티티를 조회 (여러 개일 수 있음)
-         List<TbBookKeyword> keywordList  = tbBookKeywordRepository.findByBookKeyword(keyword);
-        if (keywordList  == null) {
+
+        // 입력받은 뉴스 키워드로 TbNewsKeyword 엔티티를 조회
+        // 해당 뉴스 키워드와 연결된 TbRecommend 엔티티들을 통해 관련 TbBook 목록을 가져옴
+
+        // 1. 입력받은 keyword로 TbNewsKeyword 엔티티 조회
+        TbNewsKeyword newsKeyword = tbNewsKeywordRepository.findByNewsKeyword(keyword);
+        if(newsKeyword == null) {
             return ResponseEntity.notFound().build();
         }
-        // 각 TbBookKeyword에서 TbBook을 추출하고, 중복된 책이 있을 수 있으므로 distinct 처리
+
+        // 2. 해당 뉴스 키워드와 매핑된 TbRecommend 엔티티들 조회
+        List<TbRecommend> recommendations = tbRecommendRepository.findByNewsKeyword(newsKeyword);
+        if(recommendations.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // 3. TbRecommend 에서 TbBook 추출 -> 중복 제거 -> DTO 변환
         // 순환 참조 날까봐 Dto로 변환
-        List<BookDto> books = keywordList.stream()
-                .map(TbBookKeyword::getBook) // 사용자 선택 키워드랑 일치하는 각 TbBookKeyword 객체에서 연결된 TbBook을 추출
-                .distinct()  // TbBook 엔티티에 equals/hashCode 구현 필요 (ISBN 기준으로 구현하는 것이 좋음)
+        List<BookDto> books = recommendations.stream()
+                .map(TbRecommend::getBook) // 각 추천에서 연결된 TbBook 추출
+                .distinct() // ISBN 기준 equals/hashCode가 올바르게 구현되어 있어야 중복 제거 가능
                 .map(book -> {
-                    // 한 도서에 연결된 여러 개의 키워드 객체(TbBookKeyword)에서 실제 키워드 문자열만 추출하여, 문자열 리스트(List<String>)로 만드는 작업 수행
-                    // 도서 전체 키워드를 문자열 리스트로 반환
-                    List<String> keywords = book.getKeywords().stream()  // 도서 객체(book)가 가지고 있는 키워드 리스트(List<TbBookKeyword>)를 가져옴
-                            .map(TbBookKeyword::getBookKeyword)  // 각 TbBookKeyword 객체의 키워드 문자열을 추출
-                            .collect(Collectors.toList());  // 추출된 키워드 문자열들을 리스트(List<String>)로 모아서 반환
+                    // TbBook에 연결된 여러 TbBookKeyword에서 실제 키워드 문자열 리스트 생성
+                    List<String> keywords = book.getKeywords().stream()
+                            .map(TbBookKeyword::getBookKeyword)
+                            .collect(Collectors.toList());
                     return new BookDto(
                             book.getBookIsbn(),
                             book.getBookTitle(),
@@ -60,6 +79,7 @@ public class TbRecommendController {
                     );
                 })
                 .collect(Collectors.toList());
+
         // DTO 목록을 JSON 형식으로 리턴
         return ResponseEntity.ok(books);
 
@@ -69,6 +89,7 @@ public class TbRecommendController {
     // 특정 날짜의 뉴스 키워드 기반 도서 추천
     @Operation(summary = "해당 날짜에 등록된 뉴스 키워드 기반 도서 추천", description = "해당 날짜에 등록된 뉴스 키워드 기반 도서 추천")
     @GetMapping("/news/date/{date}")
+
     public ResponseEntity<?> recommendBooksByDate(@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         List<BookDto> books = tbRecommendService.getRecommendedBooksByDate(date);
 
@@ -77,57 +98,7 @@ public class TbRecommendController {
         }
 
         return ResponseEntity.ok(books);
-        // tb_newsKeyword → tb_recommend → tb_booksKeyword → tb_books 순으로 참조
 
-//        // 1. tb_newsKeyword 테이블에서 해당 날짜에 등록된 뉴스 키워드(TbNewsKeyword)를 조회
-//        List<TbNewsKeyword> newsList = tbNewsKeywordRepository.findAllByNewsDate(date);
-//        // 뽑은 newsList 객체 별로 newsId 뽑고
-//        // 뽑은 newsId에 매핑되는 tb_recommend 찾아서 bookkeyordId 착기
-//        // bookKetwordId로 bookkeyword 테이블에서 isbn 찾기
-//        // isbn으로 book 정보 가져오기 BookDto쓰면 될듯
-//
-//        if (newsList == null || newsList.isEmpty()) {
-//            return ResponseEntity.notFound().build();
-//        }
-//        // 2. 뉴스 키워드에서 newsId 리스트 추출
-//        List<Long> newsId = newsList.stream()
-//                .map(TbNewsKeyword::getNewsId)
-//                .collect(Collectors.toList());
-//
-//        // 3. newsId를 기준으로 tb_recommed에서 booksKeywordId 조회
-//        List<TbRecommend> recommendations = tbRecommendService.findByNewsId(newsId);
-//        if(recommendations == null || recommendations.isEmpty()){
-//            return ResponseEntity.notFound().build();
-//        }
-//
-//        // 4. booksKeywordId를 기준으로 booksIsbn 조회
-//        List<Long> booksKeywordsIds = recommendations.stream()
-//                .map(rec -> rec.getBookKeyword().getBookKeywordId())
-//                .distinct()
-//                .collect(Collectors.toList());
-//
-//        List<TbBookKeyword> bookKeywords = tbBookKeywordRepository.findByBookKeywordIdIn(booksKeywordsIds);
-//        if(bookKeywords == null || bookKeywords.isEmpty()) {
-//            return ResponseEntity.notFound().build();
-//        }
-//
-//        // 5. bookIsbn 기준으로 도서  정보를 조회하고 DTO로 변환
-//        List<BookDto> books = bookKeywords.stream()
-//                .map(TbBookKeyword::getBook)
-//                .distinct()
-//                .map(book -> new BookDto (
-//                    book.getBookIsbn(),
-//                    book.getBookTitle(),
-//                    book.getBookPublisher(),
-//                    book.getBookAuthor(),
-//                    book.getBookImg(),
-//                    book.getBookDescription(),
-//                    book.getBookCategory(),
-//                    book.getKeywords().stream().map(TbBookKeyword::getBookKeyword).collect(Collectors.toList())
-//                ))
-//                .collect(Collectors.toList());
-//
-//        return ResponseEntity.ok(books);
     }
 
 }

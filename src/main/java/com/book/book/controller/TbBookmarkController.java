@@ -8,6 +8,7 @@ import com.book.book.repository.TbBookmarkRepository;
 import com.book.book.repository.TbUserRepository;
 import com.book.book.service.TbBookmarkService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -79,7 +80,9 @@ public class TbBookmarkController {
     // 북마크 리스트
     @Operation(summary = "유저별 북마크 조회", description = "유저별 북마크 조회")
     @GetMapping("")
-    public ResponseEntity<?> getBookmarks(@RequestParam String uuid) {
+    public ResponseEntity<?> getBookmarks(
+            @Parameter(description = "북마크 할 책의 ISBN 번호", example = "9788920930720")
+            @RequestParam String uuid) {
 
         // uuid로 사용자의 북마크 목록을 가져오는 서비스 호출
         System.out.println("getBookmarks uuid: " + uuid);

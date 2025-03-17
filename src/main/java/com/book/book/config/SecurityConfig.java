@@ -10,6 +10,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -49,16 +50,10 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // CSRF 비활성화
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 비활성화
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers( "/login",
-                                "/signup",
-                                "/favicon.ico",
-                                "/swagger-ui/**",  // ✅ Swagger UI 경로 허용
-                                "/v3/api-docs/**",  // ✅ OpenAPI 문서 허용
-                                "/swagger-resources/**", // ✅ Swagger 리소스 허용
-                                "/webjars/**"  // ✅ Swagger UI 리소스 허용
-                                ).permitAll() // 로그인 & 회원가입은 인증 없이 허용
-                        .anyRequest().authenticated() // 나머지는 인증 필요
-                )
+                        .requestMatchers("/**").permitAll()
+//                        .requestMatchers("/login", "/signup", "/favicon.ico").permitAll()
+//                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
+                        .anyRequest().authenticated()) // 나머지는 인증 필요
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> {
                             String path = request.getRequestURI();
@@ -90,4 +85,7 @@ public class SecurityConfig {
 
         return source;
     }
+
+
+
 }

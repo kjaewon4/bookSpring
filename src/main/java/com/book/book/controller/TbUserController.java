@@ -47,11 +47,6 @@ public class TbUserController {
             var jwt = JwtUtil.createToken(SecurityContextHolder.getContext().getAuthentication());
             System.out.println("Generated JWT: " + jwt);
 
-//            // **세션에 사용자 정보 저장**
-//            session.setAttribute("userUuid", data.get("userUuid")); // UUID 저장
-//            session.setAttribute("jwt", jwt); // JWT 저장
-//            session.setMaxInactiveInterval(60 * 60 * 24); // 세션 만료 시간 (1일)
-
             // JWT와 userUuid를 쿠키에 저장
             Cookie jwtCookie = new Cookie("jwt", jwt);
             jwtCookie.setHttpOnly(true); // JavaScript에서 접근하지 못하도록

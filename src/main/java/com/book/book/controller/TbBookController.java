@@ -32,33 +32,18 @@ public class TbBookController {
     private final TbRecommendService tbRecommendService;
     private final AuthenticationService authenticationService;
 
-    @Operation(summary = "메인페이지", description = "오늘 날짜의 뉴스 키워드 기반 도서 추천")
-    @GetMapping("/")
-    public  ResponseEntity<?> home(HttpServletRequest request) {
-        LocalDate today = LocalDate.now(); // 오늘 날짜 가져오기
-        List<BookDto> books = tbRecommendService.getRecommendedBooksByDate(today); // 비정적 메서드 호출
-
-        if (books.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(books);
-
-//        System.out.println(auth.getName());
-
-//        // 인증 서비스 사용하여 userUuid를 추출
-//        String userUuid = authenticationService.validateJwtAndExtractUserUuid(request);
+//    @Operation(summary = "메인페이지", description = "오늘 날짜의 뉴스 키워드 기반 도서 추천")
+//    @GetMapping("/")
+//    public  ResponseEntity<?> home(HttpServletRequest request) {
+//        LocalDate today = LocalDate.now(); // 오늘 날짜 가져오기
+//        List<BookDto> books = tbRecommendService.getRecommendedBooksByDate(today); // 비정적 메서드 호출
 //
-//        System.out.println("home userUuid : " + userUuid);
-//        // userUuid가 null이면 인증되지 않은 상태
-//        if (userUuid == null) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+//        if (books.isEmpty()) {
+//            return ResponseEntity.notFound().build();
 //        }
 //
-//        // 사용자 정보를 반환 (필요에 따라 추가 정보도 반환 가능)
-//        return ResponseEntity.ok(Map.of("message", "로그인 성공", "userUuid", userUuid));
-
-    }
+//        return ResponseEntity.ok(books);
+//    }
 
     // http://localhost:8080/books/search?search=검색어, 도서 검색(제목) - 검색창 사용
     // full text index (n-gram parser 이용)쓸거임

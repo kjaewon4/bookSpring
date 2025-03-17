@@ -4,11 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Setter
 @Getter
-@ToString
+@ToString(exclude = "books")
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "tb_recommend")
@@ -19,12 +20,14 @@ public class TbRecommend {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long recommendId;
 
+    // TbRecommend와 TbBook 간의 다대일 관계 (여러 추천이 하나의 책에 연결)
     @ManyToOne
-    @JoinColumn(name = "booksKeyword_id_1")
-    private TbBookKeyword bookKeyword;  // ISBN
+    @JoinColumn(name = "book_isbn")
+    private TbBook book;
 
+    // TbRecommend와 TbNewsKeyword 간의 다대일 관계 (여러 추천이 하나의 뉴스 키워드에 연결)
     @ManyToOne
-    @JoinColumn(name = "news_id_1")
+    @JoinColumn(name = "news_id")
     private TbNewsKeyword newsKeyword;
 
 }
