@@ -1,6 +1,9 @@
 package com.book.book.controller;
 
+import com.book.book.dto.BookDto;
+import com.book.book.dto.LoginRequestDto;
 import com.book.book.entity.TbBook;
+import com.book.book.entity.TbBookKeyword;
 import com.book.book.entity.TbBookmark;
 import com.book.book.entity.TbUser;
 import com.book.book.repository.TbBookRepository;
@@ -13,6 +16,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -31,7 +37,6 @@ public class TbBookmarkController {
     private final TbUserRepository tbUserRepository;
     private final TbBookRepository tbBookRepository;
     private final TbBookmarkRepository tbBookmarkRepository;
-    private final TbBookmarkService tbBookmarkService;
 
     @Operation(
             summary = "ISBN으로 북마크 추가",
@@ -40,17 +45,17 @@ public class TbBookmarkController {
         @ApiResponse(responseCode = "200", description = "북마크 추가 성공"),
         @ApiResponse(responseCode = "401", description = "로그인이 필요함"),
         @ApiResponse(responseCode = "409", description = "이미 북마크된 책")
-    }
-    )    @PostMapping("{isbn}")
+    })
+    @PostMapping("{isbn}")
     public ResponseEntity<?> addBookMark(
             @Parameter(description = "북마크할 도서의 ISBN 번호", example = "9788920930720")
             @PathVariable("isbn") String isbn,
-            @Parameter(
-                    description = "회원 정보 (userUuid 필수)",
-                    example = "{\"userUuid\": \"user123\"}"
-            )
-            @RequestBody Map<String, String> requestBody) {
-        String userUuid = requestBody.get("userUuid");
+            Authentication authentication
+    ) {
+
+        // SecurityContextHolder에 저장된 principal을 가져옵니다.
+        String userUuid = (String) authentication.getPrincipal();
+
         System.out.println("addBookMark userUuid: " + userUuid);
 
         if (userUuid == null) {
@@ -102,33 +107,53 @@ public class TbBookmarkController {
             }
     )
     @GetMapping("")
-    public ResponseEntity<?> getBookmarks(
-            @Parameter(description = "회원의 UUID", example = "user1")
-            @RequestParam String uuid) {
+    public ResponseEntity<?> getBookmarks(Authentication authentication) {
+        // JWT에서 인증된 사용자 정보에서 userUuid 추출
+        String userUuid = (String) authentication.getPrincipal();
 
         // uuid로 사용자의 북마크 목록을 가져오는 서비스 호출
-        System.out.println("getBookmarks uuid: " + uuid);
+        System.out.println("getBookmarks uuid: " + userUuid);
 
-        // userUuid로 userId 찾기
-        Optional<TbUser> user = tbUserRepository.findByUserUuid(uuid); // 유저 찾음
-        if (user.isPresent()) {
-            Long userId = user.get().getUserId(); // get()을 통해 TbUser 객체를 꺼내고 그 객체의 getUserId()를 호출
-            // user_id를 기반으로 TbBookmark를 조회
-            List<TbBookmark> bookmarkedBooks = tbBookmarkRepository.findAllByUserUserId(userId);
 
-            System.out.println("bookmarkedBooks: " + bookmarkedBooks);
-
-            // 북마크 목록이 없다면, 빈 배열로 반환
-            if (bookmarkedBooks.isEmpty()) {
-                return ResponseEntity.ok(Collections.emptyList());
-            }
-
-            // 북마크 목록이 있다면 반환
-            return ResponseEntity.ok(bookmarkedBooks);
-        } else {
-            throw new RuntimeException("User not found");
+        // userUuid로 사용자 정보를 조회
+        Optional<TbUser> userOpt = tbUserRepository.findByUserUuid(userUuid);
+        if (!userOpt.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 사용자를 찾을 수 없습니다.");
         }
+
+        Long userId = userOpt.get().getUserId();
+        // user_id를 기반으로 TbBookmark를 조회
+        List<TbBookmark> bookmarkedBooks = tbBookmarkRepository.findAllByUserUserId(userId);
+        System.out.println("bookmarkedBooks: " + bookmarkedBooks);
+
+        if (bookmarkedBooks.isEmpty()) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+
+        // TbBookmark에서 TbBook 정보를 추출하고, BookDto로 변환 (중복 제거)
+        List<BookDto> bookDtos = bookmarkedBooks.stream()
+                .map(TbBookmark::getBook)
+                .distinct() // TbBook의 equals/hashCode가 ISBN 기준으로 구현되어 있어야 중복 제거 가능
+                .map((TbBook book) -> {
+                    List<String> keywords = book.getKeywords().stream()
+                            .map(TbBookKeyword::getBookKeyword)
+                            .collect(Collectors.toList());
+                    return new BookDto(
+                            book.getBookIsbn(),
+                            book.getBookTitle(),
+                            book.getBookPublisher(),
+                            book.getBookAuthor(),
+                            book.getBookImg(),
+                            book.getBookDescription(),
+                            book.getBookCategory(),
+                            keywords
+                    );
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(bookDtos);
     }
+
 
 
     // 북마크 삭제
@@ -145,8 +170,11 @@ public class TbBookmarkController {
     @DeleteMapping("{isbn}")
     public ResponseEntity<?> deleteBookMark(
             @Parameter(description = "삭제할 도서의 ISBN 번호", example = "9788920930720")
-            @PathVariable("isbn") String isbn, @RequestBody Map<String, String> requestBody) {
-        String userUuid = requestBody.get("userUuid");
+            @PathVariable("isbn") String isbn,
+            Authentication authentication) {
+
+        // JWT에서 인증된 사용자 정보에서 userUuid 추출
+        String userUuid = (String) authentication.getPrincipal();
         if(userUuid == null){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
 

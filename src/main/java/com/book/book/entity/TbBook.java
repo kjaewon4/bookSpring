@@ -9,7 +9,7 @@ import java.util.List;
 @Entity
 @Setter
 @Getter
-@ToString(exclude = {"keywords"})
+@ToString(exclude = {"keywords", "recommendations"}) // 순환 참조 가능 필드 제외
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true) // 키워드랑 매핑할 때 중복제거 하려고 넣은 거임

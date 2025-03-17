@@ -28,8 +28,6 @@ public class TbRecommendController {
 
     private final TbRecommendService tbRecommendService;
     private final TbBookKeywordRepository tbBookKeywordRepository;
-    private final TbNewsKeywordRepository tbNewsKeywordRepository;
-    private final TbRecommendRepository tbRecommendRepository;
 
     // http://localhost:8080/books/recommend/keyword/%EC%9D%B4%EB%B3%84
     // 뉴스 키워드 기반 도서 추천

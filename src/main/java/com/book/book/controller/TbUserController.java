@@ -1,14 +1,12 @@
 package com.book.book.controller;
 
-import com.book.book.dto.CustomUser;
+
 import com.book.book.dto.LoginRequestDto;
 import com.book.book.entity.TbUser;
 import com.book.book.jwt.JwtUtil;
 import com.book.book.repository.TbUserRepository;
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -105,54 +103,6 @@ public class TbUserController {
                 "token", jwt
         ));
     }
-
-    // JWT 로그인
-//    @ResponseBody
-//    @PostMapping("/login")
-//    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> data
-//            , HttpServletResponse response) {
-//        // 아이디/비밀번호로 인증 객체 생성
-//        var authToken = new UsernamePasswordAuthenticationToken(
-//                data.get("userUuid"), data.get("userPassword"));
-//
-//        try {
-//            // 아이디/비밀번호를 DB와 비교하여 로그인
-//            var auth = authenticationManagerBuilder.getObject().authenticate(authToken);
-//
-//            // 인증 정보 저장
-//            SecurityContextHolder.getContext().setAuthentication(auth);
-//
-//            // JWT 생성
-//            var jwt = JwtUtil.createToken(SecurityContextHolder.getContext().getAuthentication());
-//            System.out.println("Generated JWT: " + jwt);
-//
-//            if (jwt == null || jwt.isEmpty()) {
-//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                        .body(Map.of("error", "토큰 생성 실패"));
-//            }
-//
-//
-//
-//            // JWT를 HttpOnly 쿠키에 저장
-//            Cookie cookie = new Cookie("jwt", jwt);
-//            cookie.setHttpOnly(true);  // 클라이언트 자바스크립트에서 접근 불가
-//            cookie.setPath("/");  // 쿠키가 유효한 경로 설정
-//            cookie.setMaxAge(60 * 60);  // 1시간 동안 유효
-//            cookie.setDomain("localhost");
-//            response.setHeader("Set-Cookie",
-//                    "jwt=" + jwt +
-//                            "; Path=/; HttpOnly; SameSite=None");// 쿠키가 다른 도메인에서도 전송되도록 설정
-//            response.addCookie(cookie);
-//
-//
-//            // JWT를 JSON 형식으로 반환
-//            return ResponseEntity.ok(Map.of("jwt", jwt));
-//
-//        } catch (AuthenticationException e) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-//                    .body(Map.of("error", "아이디 또는 비밀번호가 잘못되었습니다."));
-//        }
-//    }
 
 
     @Operation(summary = "회원가입", description = "회원가입")

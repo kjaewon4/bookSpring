@@ -31,7 +31,6 @@ public class TbBookController {
     private final TbBookRepository tbBookRepository;
     private final TbBookStoreService tbBookStoreService;
     private final TbRecommendService tbRecommendService;
-    private final AuthenticationService authenticationService;
 
     @Operation(
             summary = "메인페이지",
