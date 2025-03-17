@@ -32,18 +32,18 @@ public class TbBookController {
     private final TbRecommendService tbRecommendService;
     private final AuthenticationService authenticationService;
 
-//    @Operation(summary = "메인페이지", description = "오늘 날짜의 뉴스 키워드 기반 도서 추천")
-//    @GetMapping("/")
-//    public  ResponseEntity<?> home(HttpServletRequest request) {
-//        LocalDate today = LocalDate.now(); // 오늘 날짜 가져오기
-//        List<BookDto> books = tbRecommendService.getRecommendedBooksByDate(today); // 비정적 메서드 호출
-//
-//        if (books.isEmpty()) {
-//            return ResponseEntity.notFound().build();
-//        }
-//
-//        return ResponseEntity.ok(books);
-//    }
+    @Operation(summary = "메인페이지", description = "오늘 날짜의 뉴스 키워드 기반 도서 추천")
+    @GetMapping("/")
+    public  ResponseEntity<?> home(HttpServletRequest request) {
+        LocalDate today = LocalDate.now(); // 오늘 날짜 가져오기
+        List<BookDto> books = tbRecommendService.getRecommendedBooksByDate(today); // 비정적 메서드 호출
+
+        if (books.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(books);
+    }
 
     // http://localhost:8080/books/search?search=검색어, 도서 검색(제목) - 검색창 사용
     // full text index (n-gram parser 이용)쓸거임

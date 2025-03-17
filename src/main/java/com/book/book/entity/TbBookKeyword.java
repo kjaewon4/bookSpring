@@ -26,7 +26,7 @@ public class TbBookKeyword {
 
     // 각 키워드는 하나의 책에만 속하지만, 하나의 책은 여러 개의 키워드를 가질 수 있는 구조
     @ManyToOne
-    @JoinColumn(name = "books_isbn_1")
+    @JoinColumn(name = "books_isbn")
     @JsonBackReference  // 직렬화 시 제외
     private TbBook book; // isbn
 }

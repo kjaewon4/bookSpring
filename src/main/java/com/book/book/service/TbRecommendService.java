@@ -65,11 +65,4 @@ public class TbRecommendService {
 
         return books;
     }
-
-//    // 책 키워드랑  뉴스 키워드 매핑
-//    @Transactional
-//    public void createRecommendations() {
-//        // Native Query 한 방으로 매핑 레코드 생성
-//        tbRecommendRepository.insertAllRecommendations();
-//    }
 }

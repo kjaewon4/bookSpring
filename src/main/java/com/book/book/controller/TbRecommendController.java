@@ -29,13 +29,6 @@ public class TbRecommendController {
     private final TbNewsKeywordRepository tbNewsKeywordRepository;
     private final TbRecommendRepository tbRecommendRepository;
 
-//    // 뉴스 키워드랑 책 키워드 매핑
-//    @PostMapping("/createRecommendations")
-//    public ResponseEntity<String> createRecommendations() {
-//        tbRecommendService.createRecommendations();
-//        return ResponseEntity.ok("뉴스 키워드랑 책 키워드 매핑 완료");
-//    }
-
     // http://localhost:8080/books/recommend/keyword/%EC%9D%B4%EB%B3%84
     // 뉴스 키워드 기반 도서 추천
     @Operation(summary = "뉴스 키워드 기반 도서 추천", description = "뉴스 키워드 기반 도서 추천")
