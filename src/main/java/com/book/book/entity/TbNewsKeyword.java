@@ -22,6 +22,5 @@ public class TbNewsKeyword {
 
     private LocalDate newsDate;  // 업데이트한 시간
 
-    // 카테고리 추가
     private String newsKeyword;
 }

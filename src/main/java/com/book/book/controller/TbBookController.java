@@ -9,6 +9,7 @@ import com.book.book.service.TbBookService;
 import com.book.book.service.TbBookStoreService;
 import com.book.book.service.TbRecommendService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -32,8 +33,14 @@ public class TbBookController {
     private final TbRecommendService tbRecommendService;
     private final AuthenticationService authenticationService;
 
-    @Operation(summary = "메인페이지", description = "오늘 날짜의 뉴스 키워드 기반 도서 추천")
-    @GetMapping("/")
+    @Operation(
+            summary = "메인페이지",
+            description = "오늘 날짜의 뉴스 키워드 기반 도서 추천을 반환합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "추천 도서 목록 반환"),
+                    @ApiResponse(responseCode = "404", description = "추천 도서가 없음")
+            }
+    )    @GetMapping("/")
     public  ResponseEntity<?> home(HttpServletRequest request) {
         LocalDate today = LocalDate.now(); // 오늘 날짜 가져오기
         List<BookDto> books = tbRecommendService.getRecommendedBooksByDate(today); // 비정적 메서드 호출
@@ -47,12 +54,18 @@ public class TbBookController {
 
     // http://localhost:8080/books/search?search=검색어, 도서 검색(제목) - 검색창 사용
     // full text index (n-gram parser 이용)쓸거임
-    @Operation(summary = "도서 검색(제목) - 검색창 사용",
-            description = "사용자가 입력한 키워드가 포함된 도서를 검색합니다. "
-            + "제목의 일부를 입력하면 해당 단어를 포함하는 도서를 반환합니다. "
-            + "예: '자바'를 입력하면 '자바의 정석', '모던 자바 인 액션' 등의 도서가 검색됩니다.")
+    @Operation(
+            summary = "도서 검색(제목)",
+            description = "사용자가 입력한 키워드가 포함된 도서를 검색합니다. 예를 들어 '자바'를 입력하면 '자바의 정석', '모던 자바 인 액션' 등의 도서를 반환합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "검색 결과 도서 목록 반환"),
+                    @ApiResponse(responseCode = "404", description = "해당 검색어에 해당하는 도서가 없음")
+            }
+    )
     @GetMapping("books/search")
-    public ResponseEntity<?> search(@RequestParam(name = "search") String search) {
+    public ResponseEntity<?> search(
+            @Parameter(description = "검색할 도서 제목 또는 키워드", example = "자바")
+            @RequestParam(name = "search") String search) {
         System.out.println("검색어 : " + search);
 
         try {
@@ -79,9 +92,18 @@ public class TbBookController {
 
     // http://localhost:8080/books/category/소설
     // http://localhost:8080/books/category/{category}, 도서 카테고리별 조회 (에세이, 문학, 시...) - 버튼 사용
-    @Operation(summary = "도서 카테고리별 조회 (에세이, 문학, 시...) - 버튼 사용", description = "도서 카테고리별 조회 (에세이, 문학, 시...) - 버튼 사용")
+    @Operation(
+            summary = "도서 카테고리별 조회",
+            description = "선택한 카테고리에 해당하는 도서를 조회합니다. 예를 들어 '소설'을 선택하면 소설 분야의 모든 도서를 반환합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "카테고리별 도서 목록 반환"),
+                    @ApiResponse(responseCode = "404", description = "해당 카테고리에 해당하는 도서가 없음")
+            }
+    )
     @GetMapping("books/category/{category}")
-    public ResponseEntity<?> searchByCategory(@PathVariable(name = "category") String category) {
+    public ResponseEntity<?> searchByCategory(
+            @Parameter(description = "조회할 도서 카테고리", example = "소설")
+            @PathVariable(name = "category") String category) {
         // tb_books 테이블에서 카테고리 일치하는거 다 가져와
         List<TbBook> result = tbBookRepository.findAllByBookCategory(category);
 
@@ -98,10 +120,16 @@ public class TbBookController {
     // http://localhost:8080/book/9788920930720
     // 특정 ISBN의 도서 상세 정보 조회
     // 상세페이지에 키워드랑 알라딘 포함
-    @Operation(summary = "특정 ISBN의 도서 상세 정보 조회", description = "주어진 ISBN을 기반으로 책 정보를 검색합니다. (예: 9788920930720)")
-    @GetMapping("book/{isbn}")
+    @Operation(
+            summary = "특정 ISBN의 도서 상세 정보 조회",
+            description = "주어진 ISBN을 기반으로 도서의 상세 정보를 검색합니다. 도서에 대한 키워드 및 추가 정보를 포함합니다.\n\n예시 ISBN: 9788920930720",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "도서 상세 정보 반환"),
+                    @ApiResponse(responseCode = "404", description = "해당 ISBN의 도서가 없음")
+            }
+    )    @GetMapping("book/{isbn}")
     public Mono<ResponseEntity<BookWithKeywordsDTO>> getBookWithKeywords(
-            @Parameter(description = "검색할 책의 ISBN 번호", example = "9788920930720")
+            @Parameter(description = "검색할 도서의 ISBN 번호", example = "9788920930720")
             @PathVariable(name= "isbn") String isbn) {
         TbBook tbBook = tbBookService.getBookWithKeywords(isbn);
 

@@ -1,9 +1,11 @@
 package com.book.book.controller;
 
 import com.book.book.dto.CustomUser;
+import com.book.book.dto.LoginRequestDto;
 import com.book.book.entity.TbUser;
 import com.book.book.jwt.JwtUtil;
 import com.book.book.repository.TbUserRepository;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,10 +34,10 @@ public class TbUserController {
     @Operation(summary = "로그인", description = "로그인")
     @ResponseBody
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> data, HttpServletResponse response, HttpSession session) {
+    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequestDto request, HttpServletResponse response) {
         // 아이디/비밀번호로 인증 객체 생성
         var authToken = new UsernamePasswordAuthenticationToken(
-                data.get("userUuid"), data.get("userPassword"));
+                request.getUserUuid(), request.getUserPassword());
 
         try {
             // 아이디/비밀번호를 DB와 비교하여 로그인
@@ -55,13 +57,6 @@ public class TbUserController {
             jwtCookie.setMaxAge(60 * 60 * 24); // 쿠키 만료 시간 (1일)
             response.addCookie(jwtCookie);
 
-//            Cookie userUuidCookie = new Cookie("userUuid", data.get("userUuid"));
-//            userUuidCookie.setHttpOnly(true);
-//            userUuidCookie.setPath("/");
-//            userUuidCookie.setSecure(false);  // HTTP에서도 전송되도록
-//            userUuidCookie.setMaxAge(60 * 60 * 24); // 쿠키 만료 시간 (1일)
-//            response.addCookie(userUuidCookie);
-//            response.setHeader("Set-Cookie", "userUuid=" + data.get("userUuid") + "; Path=/; HttpOnly; SameSite=Lax; Secure=false");
             response.setHeader("Set-Cookie", "jwt=" + jwt + "; Path=/; HttpOnly; SameSite=Lax; Secure=false");
 
 
@@ -71,7 +66,7 @@ public class TbUserController {
             return ResponseEntity.ok(Map.of(
                     "message", "로그인 성공",
                     "token", jwt,
-                    "userUuid", data.get("userUuid")
+                    "userUuid", request.getUserUuid()
             ));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -110,22 +105,6 @@ public class TbUserController {
                 "token", jwt
         ));
     }
-
-//    // 서버 코드: 세션 상태를 확인하는 API
-//    @ResponseBody
-//    @GetMapping("/check-session")
-//    public ResponseEntity<Map<String, Object>> checkSession(HttpSession session) {
-//        // 세션에 저장된 사용자 정보 확인
-//        Object authenticatedUser = session.getAttribute("authenticatedUser");
-//
-//        if (authenticatedUser != null) {
-//            return ResponseEntity.ok(Map.of("user", authenticatedUser));
-//        } else {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-//                    .body(Map.of("error", "로그인 해주세요."));
-//        }
-//    }
-
 
     // JWT 로그인
 //    @ResponseBody
@@ -175,19 +154,6 @@ public class TbUserController {
 //        }
 //    }
 
-    // 세션 로그인
-//    @PostMapping("/login")
-//    public String login(@RequestBody TbUser tbUser) {
-//        Optional<TbUser> result = userRepository.findByUserName("jw");
-//
-//        if (result.isPresent()) {
-//            System.out.println(result.get());
-//        } else {
-//            System.out.println("사용자를 찾을 수 없습니다.");
-//        }
-//
-//        return "";
-//    }
 
     @Operation(summary = "회원가입", description = "회원가입")
     @PostMapping("/signup")

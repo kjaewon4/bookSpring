@@ -9,6 +9,7 @@ import com.book.book.repository.TbUserRepository;
 import com.book.book.service.TbBookmarkService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,9 +33,23 @@ public class TbBookmarkController {
     private final TbBookmarkRepository tbBookmarkRepository;
     private final TbBookmarkService tbBookmarkService;
 
-    @Operation(summary = "isbn으로 북마크", description = "isbn으로 북마크")
-    @PostMapping("{isbn}")
-    public ResponseEntity addBookMark(@PathVariable("isbn") String isbn, @RequestBody Map<String, String> requestBody) {
+    @Operation(
+            summary = "ISBN으로 북마크 추가",
+            description = "사용자가 특정 ISBN의 책을 북마크에 추가합니다. 요청 본문에 회원 UUID가 필요합니다.",
+            responses = {
+        @ApiResponse(responseCode = "200", description = "북마크 추가 성공"),
+        @ApiResponse(responseCode = "401", description = "로그인이 필요함"),
+        @ApiResponse(responseCode = "409", description = "이미 북마크된 책")
+    }
+    )    @PostMapping("{isbn}")
+    public ResponseEntity<?> addBookMark(
+            @Parameter(description = "북마크할 도서의 ISBN 번호", example = "9788920930720")
+            @PathVariable("isbn") String isbn,
+            @Parameter(
+                    description = "회원 정보 (userUuid 필수)",
+                    example = "{\"userUuid\": \"user123\"}"
+            )
+            @RequestBody Map<String, String> requestBody) {
         String userUuid = requestBody.get("userUuid");
         System.out.println("addBookMark userUuid: " + userUuid);
 
@@ -78,10 +93,17 @@ public class TbBookmarkController {
     }
 
     // 북마크 리스트
-    @Operation(summary = "유저별 북마크 조회", description = "유저별 북마크 조회")
+    @Operation(
+            summary = "회원별 북마크 조회",
+            description = "회원의 UUID를 기반으로 해당 회원이 추가한 북마크 목록을 조회합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "회원 북마크 목록 반환"),
+                    @ApiResponse(responseCode = "404", description = "해당 회원을 찾을 수 없음")
+            }
+    )
     @GetMapping("")
     public ResponseEntity<?> getBookmarks(
-            @Parameter(description = "북마크 할 책의 ISBN 번호", example = "9788920930720")
+            @Parameter(description = "회원의 UUID", example = "user1")
             @RequestParam String uuid) {
 
         // uuid로 사용자의 북마크 목록을 가져오는 서비스 호출
@@ -107,11 +129,23 @@ public class TbBookmarkController {
             throw new RuntimeException("User not found");
         }
     }
+
+
     // 북마크 삭제
-    @Operation(summary = "유저별 북마크 삭제", description = "유저별 북마크 삭제")
+    @Operation(
+            summary = "회원별 북마크 삭제",
+            description = "회원이 추가한 북마크 중 특정 ISBN의 도서를 삭제합니다. 요청 본문에 회원 UUID가 필요합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "북마크 삭제 성공"),
+                    @ApiResponse(responseCode = "401", description = "로그인이 필요함"),
+                    @ApiResponse(responseCode = "404", description = "삭제할 북마크가 존재하지 않음")
+            }
+    )
     @Transactional
     @DeleteMapping("{isbn}")
-    public ResponseEntity<?> deleteBookMark(@PathVariable("isbn") String isbn, @RequestBody Map<String, String> requestBody) {
+    public ResponseEntity<?> deleteBookMark(
+            @Parameter(description = "삭제할 도서의 ISBN 번호", example = "9788920930720")
+            @PathVariable("isbn") String isbn, @RequestBody Map<String, String> requestBody) {
         String userUuid = requestBody.get("userUuid");
         if(userUuid == null){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
