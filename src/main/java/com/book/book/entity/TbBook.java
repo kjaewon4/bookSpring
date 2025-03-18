@@ -50,14 +50,14 @@ public class TbBook {
     private List<TbRecommend> recommendations;
 
 
-    public TbBook(String title, String image, String author, String publisher, String isbn, String description) {
+    public TbBook(String title, String image, String author, String publisher, String isbn, String description, String bookCategory) {
         this.bookTitle = title;
         this.bookImg = image;
         this.bookAuthor = author;
         this.bookPublisher = publisher;
         this.bookIsbn = isbn;
         this.bookDescription = description;
+        this.bookCategory = bookCategory;
     }
-
 
 }

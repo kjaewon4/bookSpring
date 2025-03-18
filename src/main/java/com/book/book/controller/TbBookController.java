@@ -4,7 +4,6 @@ import com.book.book.dto.BookDto;
 import com.book.book.dto.BookWithKeywordsDTO;
 import com.book.book.entity.*;
 import com.book.book.repository.TbBookRepository;
-import com.book.book.service.AuthenticationService;
 import com.book.book.service.TbBookService;
 import com.book.book.service.TbBookStoreService;
 import com.book.book.service.TbRecommendService;
@@ -17,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 import io.swagger.v3.oas.annotations.Parameter;
-
 
 import java.time.LocalDate;
 import java.util.Collections;
@@ -39,7 +37,8 @@ public class TbBookController {
                     @ApiResponse(responseCode = "200", description = "추천 도서 목록 반환"),
                     @ApiResponse(responseCode = "404", description = "추천 도서가 없음")
             }
-    )    @GetMapping("/")
+    )
+    @GetMapping("/")
     public  ResponseEntity<?> home(HttpServletRequest request) {
         LocalDate today = LocalDate.now(); // 오늘 날짜 가져오기
         List<BookDto> books = tbRecommendService.getRecommendedBooksByDate(today); // 비정적 메서드 호출
@@ -116,6 +115,7 @@ public class TbBookController {
 
     }
 
+
     // http://localhost:8080/book/9788920930720
     // 특정 ISBN의 도서 상세 정보 조회
     // 상세페이지에 키워드랑 알라딘 포함
@@ -126,7 +126,8 @@ public class TbBookController {
                     @ApiResponse(responseCode = "200", description = "도서 상세 정보 반환"),
                     @ApiResponse(responseCode = "404", description = "해당 ISBN의 도서가 없음")
             }
-    )    @GetMapping("book/{isbn}")
+    )
+    @GetMapping("book/{isbn}")
     public Mono<ResponseEntity<BookWithKeywordsDTO>> getBookWithKeywords(
             @Parameter(description = "검색할 도서의 ISBN 번호", example = "9788920930720")
             @PathVariable(name= "isbn") String isbn) {
@@ -148,10 +149,6 @@ public class TbBookController {
 
         // 알라딘 API에서 매정 정보 가져오기
 
-
-        // 키워드 포함 책 정보 리턴
-        // TODO : 알라딘도 포함시켜서 리턴으로 수정
-//        return ResponseEntity.ok(bookWithKeywordsDTO);
         return tbBookStoreService.fetchBookStores(isbn)
                 .doOnNext(bookStoreResponse -> {
                     System.out.println("bookStoreResponse 내용: " + bookStoreResponse);
@@ -167,4 +164,43 @@ public class TbBookController {
                     return Mono.just(ResponseEntity.ok(bookWithKeywordsDTO));
                 });
     }
+
+
+    // 책정보, 알라딘
+//    @Operation(
+//            summary = "특정 ISBN의 도서 상세 정보 조회",
+//            description = "주어진 ISBN을 기반으로 도서의 상세 정보를 검색합니다.\n\n예시 ISBN: 9788920930720",
+//            responses = {
+//                    @ApiResponse(responseCode = "200", description = "도서 상세 정보 반환"),
+//                    @ApiResponse(responseCode = "404", description = "해당 ISBN의 도서가 없음")
+//            }
+//    )
+//    @GetMapping("book/{isbn}")
+//    public Mono<ResponseEntity<BookWithBookStore>> getBookWithBookStore(
+//            @Parameter(description = "검색할 도서의 ISBN 번호", example = "9788920930720")
+//            @PathVariable(name= "isbn") String isbn) {
+//
+//        TbBook tbBook = tbBookRepository.findByBookIsbn(isbn);
+//
+//
+//        // 알라딘 API에서 매정 정보 가져오기
+//
+//        return tbBookStoreService.fetchBookStores(isbn)
+//                .doOnNext(bookStoreResponse -> {
+//                    System.out.println("bookStoreResponse 내용: " + bookStoreResponse);
+//                })
+//                .flatMap(bookStoreResponse -> {
+//                    System.out.println("bookStoreResponse : " + bookStoreResponse.toString());
+//                    if (bookStoreResponse.getItemOffStoreList() != null) {
+//                        BookWithBookStore.setBookStores(bookStoreResponse.getItemOffStoreList());
+//                    } else {
+//                        System.out.println("itemOffStoreList is null!");
+//                    }
+//                    System.out.println("bookWithKeywordsDTO : " + BookWithBookStore.toString());
+//                    return Mono.just(ResponseEntity.ok(BookWithBookStore));
+//                });
+//
+//
+//    }
+
 }

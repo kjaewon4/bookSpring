@@ -5,8 +5,6 @@
 //import org.springframework.boot.CommandLineRunner;
 //import org.springframework.stereotype.Component;
 //
-//import java.util.List;
-//
 //@Component
 //public class LibraryApiRunner implements CommandLineRunner {
 //
@@ -20,15 +18,18 @@
 //    @Override
 //    public void run(String... args) {
 //        libraryApiService.getRecomisbn()
-//                .doOnNext(recomisbnList -> {
-//                    if (!recomisbnList.isEmpty()) {
+//                .doOnNext(isbnWithCategoryDtoList -> {
+//                    if (!isbnWithCategoryDtoList.isEmpty()) {
 //                        System.out.println("📚 추천된 ISBN 목록:");
-////                        recomisbnList.forEach(isbn -> System.out.println(" - " + isbn));
+//                        // 각 IsbnWithCategoryDto 객체에서 recomIsbn과 drCodeName 출력
+//                         isbnWithCategoryDtoList.forEach(dto ->
+//                             System.out.println(" - ISBN: " + dto.getRecomIsbn() + ", 카테고리: " + dto.getDrCodeName()));
 //                    } else {
 //                        System.out.println("❌ 추천된 ISBN이 없습니다.");
 //                    }
 //                })
 //                .doOnError(error -> System.err.println("🚨 API 호출 중 오류 발생: " + error.getMessage()))
 //                .subscribe();
+//
 //    }
 //}

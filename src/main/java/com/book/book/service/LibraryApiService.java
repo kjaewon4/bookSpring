@@ -1,5 +1,6 @@
 package com.book.book.service;
 
+import com.book.book.dto.IsbnWithCategoryDto;
 import com.book.book.dto.LibraryApiDto;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
@@ -16,6 +17,7 @@ import reactor.netty.http.client.HttpClient;
 import java.io.StringReader;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -30,21 +32,16 @@ public class LibraryApiService {
     public LibraryApiService(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder
                 .baseUrl("https://nl.go.kr/NL/search/openApi")
-//                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024))
                 .clientConnector(new ReactorClientHttpConnector(HttpClient.create()
                         .responseTimeout(Duration.ofSeconds(60))))
                 .exchangeStrategies(ExchangeStrategies.builder()
                         .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(20 * 1024 * 1024)) // 20MB 설정
                         .build())
                 .build();
-
-        //  .exchangeStrategies(ExchangeStrategies.builder()
-        //                        .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(20 * 1024 * 1024)) // 20MB 설정
-        //                        .build())
-        //                .build();
     }
 
-    public Mono<List<String>> getRecomisbn() {
+    // IsbnWithCategoryDto를 반환하는 방식으로
+    public Mono<List<IsbnWithCategoryDto>> getRecomisbn() {
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/saseoApi.do")
@@ -60,18 +57,22 @@ public class LibraryApiService {
                     try {
                         LibraryApiDto parsedResponse = parseXml(xmlResponse);
                         // listElements가 null이면 빈 리스트 반환
-                        List<String> isbnList = Optional.ofNullable(parsedResponse.getListElements())
+                        List<IsbnWithCategoryDto> isbnAndDrCodeNames = Optional.ofNullable(parsedResponse.getListElements())
                                 .orElse(List.of())
                                 .stream()
                                 // 각 ListElement의 items를 평탄화
                                 .flatMap(listElem -> Optional.ofNullable(listElem.getItems())
                                         .orElse(List.of())
                                         .stream())
-                                .map(LibraryApiDto.Item::getRecomIsbn)
-                                .filter(isbn -> isbn != null && !isbn.isBlank())
+                                // 🔥 ISBN이 없으면 제외
+                                .filter(item -> item.getRecomIsbn() != null && !item.getRecomIsbn().isBlank())
+                                // IsbnWithCategoryDto로 매핑
+                                .map(item -> new IsbnWithCategoryDto(
+                                        item.getRecomIsbn(),
+                                        (item.getDrCodeName() == null || item.getDrCodeName().isBlank()) ? "미분류" : item.getDrCodeName()))
                                 .collect(Collectors.toList());
 
-                        return Mono.just(isbnList);
+                        return Mono.just(isbnAndDrCodeNames);
                     } catch (JAXBException e) {
                         e.printStackTrace();
                         return Mono.error(e);

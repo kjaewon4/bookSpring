@@ -11,7 +11,7 @@ import java.util.Optional;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "tb_booksMark")
+@Table(name = "tb_booksmark")
 public class TbBookmark {
 
     @Id

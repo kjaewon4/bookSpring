@@ -22,6 +22,8 @@ public class LibraryApiDto {
     @XmlElement(name = "list")
     private List<ListElement> listElements;
 
+    // drCodeName 매핑 추가
+
     @Getter
     @Setter
     @NoArgsConstructor
@@ -42,5 +44,9 @@ public class LibraryApiDto {
         // <item> 내부의 <recomisbn> 태그 매핑
         @XmlElement(name = "recomisbn")
         private String recomIsbn;
+
+        // <item> 내부의 <drCodeName> 태그 매핑. 카테고리임
+        @XmlElement(name = "drCodeName")
+        private String drCodeName;
     }
 }

@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Setter
@@ -23,4 +22,6 @@ public class TbNewsKeyword {
     private LocalDate newsDate;  // 업데이트한 시간
 
     private String newsKeyword;
+
+    private String newsCategory;
 }

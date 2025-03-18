@@ -44,7 +44,6 @@ public class TbBookmarkController {
             responses = {
         @ApiResponse(responseCode = "200", description = "북마크 추가 성공"),
         @ApiResponse(responseCode = "401", description = "로그인이 필요함"),
-        @ApiResponse(responseCode = "409", description = "이미 북마크된 책")
     })
     @PostMapping("{isbn}")
     public ResponseEntity<?> addBookMark(
