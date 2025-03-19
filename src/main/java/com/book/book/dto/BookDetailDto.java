@@ -1,5 +1,6 @@
 package com.book.book.dto;
 
+import com.book.book.entity.TbNewsKeyword;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -22,7 +23,8 @@ public class BookDetailDto {
     private String bookCategory;
     private String bookDescription;
     private String bookImg;
-    private String newsCategory;  // 뉴스 카테고리
 
     private List<TbBookStoreDto> bookStores = new ArrayList<>();  // 서점 정보 리스트, null 방지
+    // 추가된 뉴스 테이블 전체 데이터를 담기 위한 필드
+    private List<TbNewsKeyword> newsList = new ArrayList<>();
 }

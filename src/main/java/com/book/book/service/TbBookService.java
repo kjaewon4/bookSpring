@@ -3,13 +3,18 @@ package com.book.book.service;
 
 import com.book.book.dto.BookDetailDto;
 import com.book.book.dto.BookDto;
+import com.book.book.dto.TbBookStoreDto;
+import com.book.book.dto.TbBookStoreResponseDto;
 import com.book.book.entity.TbBook;
 import com.book.book.entity.TbBookKeyword;
+import com.book.book.entity.TbNewsKeyword;
 import com.book.book.repository.TbBookRepository;
+import com.book.book.repository.TbNewsKeywordRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,14 +24,16 @@ import java.util.stream.Collectors;
 public class TbBookService {
     private final TbBookRepository tbBookRepository;
     private final TbBookStoreService tbBookStoreService;
+    private final TbNewsKeywordRepository tbNewsKeywordRepository;
 
 
     // BookDetailDto 반환 메서드 (ISBN으로 조회)
     public Mono<ResponseEntity<BookDetailDto>> getBookDetailDtoByIsbn(String isbn) {
+        // 1) 책 정보 가져오기
         return Mono.justOrEmpty(tbBookRepository.findByBookIsbn(isbn))
                 .switchIfEmpty(Mono.error(new RuntimeException(isbn + "에 해당하는 도서를 찾을 수 없습니다.")))
                 .flatMap(tbBook -> {
-                    // BookDetailDto 변환
+                    // BookDetailDto 생성
                     BookDetailDto bookDetailDto = BookDetailDto.builder()
                             .bookIsbn(tbBook.getBookIsbn())
                             .bookTitle(tbBook.getBookTitle())
@@ -35,21 +42,62 @@ public class TbBookService {
                             .bookImg(tbBook.getBookImg())
                             .bookDescription(tbBook.getBookDescription())
                             .bookCategory(tbBook.getBookCategory())
-                            .newsCategory("미분류")  // TODO: 뉴스 카테고리 말고 뉴스 테이블 다 넣어
                             .build();
 
-                    // 비동기적으로 알라딘 API에서 서점 정보 가져오기
-                    return tbBookStoreService.fetchBookStores(isbn)
-                            .doOnNext(bookStoreResponse -> System.out.println("bookStoreResponse 내용: " + bookStoreResponse))
-                            .map(bookStoreResponse -> {
+                    // 비동기적으로 서점 정보 가져오기 (Reactive)
+                    Mono<TbBookStoreResponseDto> bookStoreMono = tbBookStoreService.fetchBookStores(isbn)
+                            .doOnNext(bookStoreResponse -> System.out.println("bookStoreResponse 내용: " + bookStoreResponse));
+
+                    // 동기적으로 반환되는 뉴스 데이터를 Mono로 감싸기
+                    Mono<List<TbNewsKeyword>> newsMono = Mono.fromCallable(() -> tbNewsKeywordRepository.findAllByBooksIsbn(isbn))
+                            .subscribeOn(Schedulers.boundedElastic());
+
+                    // 두 Mono를 병합하여 DTO 생성
+                    return Mono.zip(bookStoreMono, newsMono)
+                            .map(tuple -> {
+                                TbBookStoreResponseDto bookStoreResponse = tuple.getT1();
+                                List<TbNewsKeyword> newsList = tuple.getT2();
+
                                 if (bookStoreResponse.getItemOffStoreList() != null) {
                                     bookDetailDto.setBookStores(bookStoreResponse.getItemOffStoreList());
                                 } else {
                                     System.out.println("itemOffStoreList is null!");
                                 }
+                                bookDetailDto.setNewsList(newsList);
                                 return ResponseEntity.ok(bookDetailDto);
                             });
                 });
+
+
+
+
+        // 1) 책 정보 가져오기
+//        return Mono.justOrEmpty(tbBookRepository.findByBookIsbn(isbn))
+//                .switchIfEmpty(Mono.error(new RuntimeException(isbn + "에 해당하는 도서를 찾을 수 없습니다.")))
+//                .flatMap(tbBook -> {
+//                    // 2) BookDetailDto 생성
+//                    BookDetailDto bookDetailDto = BookDetailDto.builder()
+//                            .bookIsbn(tbBook.getBookIsbn())
+//                            .bookTitle(tbBook.getBookTitle())
+//                            .bookPublisher(tbBook.getBookPublisher())
+//                            .bookAuthor(tbBook.getBookAuthor())
+//                            .bookImg(tbBook.getBookImg())
+//                            .bookDescription(tbBook.getBookDescription())
+//                            .bookCategory(tbBook.getBookCategory())
+//                            .build();
+//
+//                    // 비동기적으로 알라딘 API에서 서점 정보 가져오기
+//                    return tbBookStoreService.fetchBookStores(isbn)
+//                            .doOnNext(bookStoreResponse -> System.out.println("bookStoreResponse 내용: " + bookStoreResponse))
+//                            .map(bookStoreResponse -> {
+//                                if (bookStoreResponse.getItemOffStoreList() != null) {
+//                                    bookDetailDto.setBookStores(bookStoreResponse.getItemOffStoreList());
+//                                } else {
+//                                    System.out.println("itemOffStoreList is null!");
+//                                }
+//                                return ResponseEntity.ok(bookDetailDto);
+//                            });
+//                });
     }
 
 

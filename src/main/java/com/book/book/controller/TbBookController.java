@@ -133,7 +133,7 @@ public class TbBookController {
     )
     @GetMapping("book/{isbn}")
     public ResponseEntity<BookDetailDto> getBookDetailsByIsbn(
-            @Parameter(description = "검색할 도서의 ISBN 번호", example = "9788920930720")
+            @Parameter(description = "검색할 도서의 ISBN 번호", example = "9791188366170")
             @PathVariable(name= "isbn") String isbn
     ) {
 

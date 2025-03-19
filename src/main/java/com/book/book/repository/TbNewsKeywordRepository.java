@@ -2,6 +2,9 @@ package com.book.book.repository;
 
 import com.book.book.entity.TbNewsKeyword;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import reactor.core.publisher.Flux;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -11,4 +14,7 @@ public interface TbNewsKeywordRepository extends JpaRepository<TbNewsKeyword, In
     List<TbNewsKeyword> findAllByNewsDate(LocalDate newsDate);
 
     TbNewsKeyword findByNewsKeyword(String newsKeyword);
-}
+
+    // 3) 특정 isbn에 해당하는 뉴스만 조회 (tb_recommend 조인)
+    @Query("SELECT r.newsKeyword FROM TbRecommend r WHERE r.book.bookIsbn = :isbn")
+    List<TbNewsKeyword> findAllByBooksIsbn(@Param("isbn") String isbn);}

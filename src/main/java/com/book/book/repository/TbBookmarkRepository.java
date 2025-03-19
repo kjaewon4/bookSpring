@@ -14,7 +14,6 @@ public interface TbBookmarkRepository extends JpaRepository<TbBookmark, Long> {
 
     TbBookmark findByBookBookIsbn(String bookIsbn); // TbBook의 bookIsbn 필드로 조회
 
-    List<Book> findAllByUserUserUuid(String UserUuid);
     List<TbBookmark> findAllByUserUserId(Long userId);
 
 
