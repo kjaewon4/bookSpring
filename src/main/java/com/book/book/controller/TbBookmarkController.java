@@ -1,15 +1,12 @@
 package com.book.book.controller;
 
 import com.book.book.dto.BookDto;
-import com.book.book.dto.LoginRequestDto;
 import com.book.book.entity.TbBook;
-import com.book.book.entity.TbBookKeyword;
 import com.book.book.entity.TbBookmark;
 import com.book.book.entity.TbUser;
 import com.book.book.repository.TbBookRepository;
 import com.book.book.repository.TbBookmarkRepository;
 import com.book.book.repository.TbUserRepository;
-import com.book.book.service.TbBookmarkService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,15 +14,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RequestBody;
 
-import java.awt.print.Book;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -61,11 +54,8 @@ public class TbBookmarkController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
         }
 
-        TbBook book = tbBookRepository.findByBookIsbn(isbn);
-
-        if (book == null) {
-            return ResponseEntity.badRequest().body("해당 ISBN의 책이 존재하지 않습니다.");
-        }
+        TbBook book = tbBookRepository.findByBookIsbn(isbn)
+                .orElseThrow(() -> new RuntimeException(isbn + "에 해당하는 도서를 찾을 수 없습니다."));
 
         Optional<TbUser> user = tbUserRepository.findByUserUuid(userUuid);
         if (user.isEmpty()) {
@@ -134,9 +124,9 @@ public class TbBookmarkController {
                 .map(TbBookmark::getBook)
                 .distinct() // TbBook의 equals/hashCode가 ISBN 기준으로 구현되어 있어야 중복 제거 가능
                 .map((TbBook book) -> {
-                    List<String> keywords = book.getKeywords().stream()
-                            .map(TbBookKeyword::getBookKeyword)
-                            .collect(Collectors.toList());
+//                    List<String> keywords = book.getKeywords().stream()
+//                            .map(TbBookKeyword::getBookKeyword)
+//                            .collect(Collectors.toList());
                     return new BookDto(
                             book.getBookIsbn(),
                             book.getBookTitle(),
@@ -144,8 +134,8 @@ public class TbBookmarkController {
                             book.getBookAuthor(),
                             book.getBookImg(),
                             book.getBookDescription(),
-                            book.getBookCategory(),
-                            keywords
+                            book.getBookCategory()
+//                            keywords
                     );
                 })
                 .collect(Collectors.toList());
@@ -179,10 +169,8 @@ public class TbBookmarkController {
 
         }
 
-        TbBook book = tbBookRepository.findByBookIsbn(isbn);
-        if (book == null) {
-            return ResponseEntity.badRequest().body("해딩 ISBN의 책이 존재하지 않습니다.");
-        }
+        TbBook book = tbBookRepository.findByBookIsbn(isbn)
+                .orElseThrow(() -> new RuntimeException(isbn + "에 해당하는 도서를 찾을 수 없습니다."));
 
         // uuid로 유저 정보 가져옴
         Optional<TbUser> user = tbUserRepository.findByUserUuid(userUuid);

@@ -52,9 +52,9 @@ public class TbRecommendController {
                 .map(TbBookKeyword::getBook)
                 .distinct()  // ISBN 기준 equals/hashCode가 올바르게 구현되어 있어야 함
                 .map(book -> {
-                    List<String> keywords = book.getKeywords().stream()
-                            .map(TbBookKeyword::getBookKeyword)
-                            .collect(Collectors.toList());
+//                    List<String> keywords = book.getKeywords().stream()
+//                            .map(TbBookKeyword::getBookKeyword)
+//                            .collect(Collectors.toList());
                     return new BookDto(
                             book.getBookIsbn(),
                             book.getBookTitle(),
@@ -62,8 +62,8 @@ public class TbRecommendController {
                             book.getBookAuthor(),
                             book.getBookImg(),
                             book.getBookDescription(),
-                            book.getBookCategory(),
-                            keywords
+                            book.getBookCategory()
+//                            keywords
                     );
                 })
                 .collect(Collectors.toList());

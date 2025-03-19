@@ -47,9 +47,9 @@ public class TbRecommendService {
                 .map(TbRecommend::getBook)
                 .distinct()  // TbBook의 equals/hashCode가 ISBN 기준으로 구현되어 있어야 함
                 .map(book -> {
-                    List<String> keywords = book.getKeywords().stream()
-                            .map(TbBookKeyword::getBookKeyword)
-                            .collect(Collectors.toList());
+//                    List<String> keywords = book.getKeywords().stream()
+//                            .map(TbBookKeyword::getBookKeyword)
+//                            .collect(Collectors.toList());
                     return new BookDto(
                             book.getBookIsbn(),
                             book.getBookTitle(),
@@ -57,8 +57,8 @@ public class TbRecommendService {
                             book.getBookAuthor(),
                             book.getBookImg(),
                             book.getBookDescription(),
-                            book.getBookCategory(),
-                            keywords
+                            book.getBookCategory()
+//                            keywords
                     );
                 })
                 .collect(Collectors.toList());

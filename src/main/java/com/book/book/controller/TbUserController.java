@@ -47,7 +47,7 @@ public class TbUserController {
             var jwt = JwtUtil.createToken(SecurityContextHolder.getContext().getAuthentication());
             System.out.println("Generated JWT: " + jwt);
 
-            // JWT와 userUuid를 쿠키에 저장
+            // JWT를 쿠키에 저장
             Cookie jwtCookie = new Cookie("jwt", jwt);
             jwtCookie.setHttpOnly(true); // JavaScript에서 접근하지 못하도록
             jwtCookie.setPath("/"); // 모든 경로에서 접근 가능
@@ -56,8 +56,6 @@ public class TbUserController {
             response.addCookie(jwtCookie);
 
             response.setHeader("Set-Cookie", "jwt=" + jwt + "; Path=/; HttpOnly; SameSite=Lax; Secure=false");
-
-
 
             // 세션 ID를 반환하는 예시
             // 로그인 성공 시 JWT와 사용자 UUID를 반환
@@ -83,25 +81,6 @@ public class TbUserController {
         response.addCookie(jwtCookie);
 
         return ResponseEntity.ok(Map.of("message", "로그아웃 성공"));
-    }
-
-
-    @Operation(summary = "세션 확인", description = "현재 로그인한 사용자 정보를 반환합니다.")
-    @GetMapping("/session")
-    public ResponseEntity<Map<String, String>> getSessionInfo(HttpSession session) {
-        String userUuid = (String) session.getAttribute("userUuid");
-        String jwt = (String) session.getAttribute("jwt");
-
-        if (userUuid == null || jwt == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "세션이 만료되었거나 로그인되지 않았습니다."));
-        }
-
-        return ResponseEntity.ok(Map.of(
-                "message", "세션 정보 조회 성공",
-                "userUuid", userUuid,
-                "token", jwt
-        ));
     }
 
 

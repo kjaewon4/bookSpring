@@ -18,5 +18,5 @@ public class BookDto {
     private String bookDescription;
     private String bookCategory;
     // TbBookKeyword 엔티티의 bookKeyword 필드를 문자열 리스트로 변환하여 담음
-    private List<String> keywords;
+//    private List<String> keywords;
 }
