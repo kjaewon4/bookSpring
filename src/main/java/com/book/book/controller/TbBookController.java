@@ -10,6 +10,9 @@ import com.book.book.service.TbRecommendService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -62,29 +65,41 @@ public class TbBookController {
     @GetMapping("books/search")
     public ResponseEntity<?> search(
             @Parameter(description = "검색할 도서 제목", example = "그림")
-            @RequestParam(name = "search") String search) {
-        System.out.println("검색어 : " + search);
+            @RequestParam(name = "search") String search,
+            @RequestParam(defaultValue = "0") int page,  // 기본 페이지 0
+            @RequestParam(defaultValue = "20") int size  // 한 페이지당 20개씩
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<BookDto> bookList = tbBookService.searchBooksByTitle(search, pageable);
 
-        try {
-            // tb_books 테이블에서 받은 검색어를 books_title에 포함시키는 모든 도서 검색
-            List<TbBook> books = tbBookRepository.findByBookTitleContainingIgnoreCase(search);
-            List<BookDto> bookList = tbBookService.getBookDto(books);
-
-            if (bookList.isEmpty()) {
-                // 없으면 해당 검색어에 해당하는 도서가 없음을 출력
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("해당 검색어에 해당하는 도서가 없습니다.");
-            }
-
-            System.out.println("검색 결과 : " + bookList);
-            // 프론트엔드로 검색 결과 전송
-            return ResponseEntity.ok(bookList);
-
-        } catch (Exception e) {
-            // 예외 처리
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("검색 중 오류가 발생했습니다.");
+        if (bookList.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 검색어에 해당하는 도서가 없습니다.");
         }
+
+        return ResponseEntity.ok(bookList);
+
+//        System.out.println("검색어 : " + search);
+//
+//        try {
+//            // tb_books 테이블에서 받은 검색어를 books_title에 포함시키는 모든 도서 검색
+//            List<TbBook> books = tbBookRepository.findByBookTitleContainingIgnoreCase(search);
+//            List<BookDto> bookList = tbBookService.getBookDto(books);
+//
+//            if (bookList.isEmpty()) {
+//                // 없으면 해당 검색어에 해당하는 도서가 없음을 출력
+//                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                        .body("해당 검색어에 해당하는 도서가 없습니다.");
+//            }
+//
+//            System.out.println("검색 결과 : " + bookList);
+//            // 프론트엔드로 검색 결과 전송
+//            return ResponseEntity.ok(bookList);
+//
+//        } catch (Exception e) {
+//            // 예외 처리
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body("검색 중 오류가 발생했습니다.");
+//        }
 
     }
 
@@ -102,22 +117,32 @@ public class TbBookController {
     @GetMapping("books/category/{category}")
     public ResponseEntity<?> searchByCategory(
             @Parameter(description = "조회할 도서 카테고리", example = "인문과학")
-            @PathVariable(name = "category") String category
+            @PathVariable(name = "category") String category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
     ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<BookDto> bookList = tbBookService.getBooksByCategory(category, pageable);
 
-
-        // tb_books 테이블에서 카테고리 일치하는거 다 가져와
-        List<TbBook> books = tbBookRepository.findAllByBookCategory(category);
-        List<BookDto> bookList = tbBookService.getBookDto(books);
-
-
-        if (!bookList.isEmpty()) {
-            System.out.println("searchByCategory: " + bookList);
-            return ResponseEntity.ok(bookList); // 200 OK + JSON 반환
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Collections.singletonMap("message", "해당 카테고리에 해당하는 도서가 없습니다."));
+        if (bookList.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 카테고리에 해당하는 도서가 없습니다.");
         }
+
+        return ResponseEntity.ok(bookList);
+
+//
+//        // tb_books 테이블에서 카테고리 일치하는거 다 가져와
+//        List<TbBook> books = tbBookRepository.findAllByBookCategory(category);
+//        List<BookDto> bookList = tbBookService.getBookDto(books);
+//
+//
+//        if (!bookList.isEmpty()) {
+//            System.out.println("searchByCategory: " + bookList);
+//            return ResponseEntity.ok(bookList); // 200 OK + JSON 반환
+//        } else {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                    .body(Collections.singletonMap("message", "해당 카테고리에 해당하는 도서가 없습니다."));
+//        }
 
     }
 

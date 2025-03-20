@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")  // CORS 직접 지정
 @RestController
 @RequiredArgsConstructor
 public class TbUserController {
