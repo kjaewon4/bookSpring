@@ -3,7 +3,6 @@ package com.book.book.service;
 
 import com.book.book.dto.BookDetailDto;
 import com.book.book.dto.BookDto;
-import com.book.book.dto.TbBookStoreDto;
 import com.book.book.dto.TbBookStoreResponseDto;
 import com.book.book.entity.TbBook;
 import com.book.book.entity.TbBookKeyword;
@@ -15,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import org.springframework.data.domain.Pageable; // ✅ 올바른 Pageable (Spring Data)
+import org.springframework.data.domain.Page; // ✅ Page도 함께 import
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +26,17 @@ public class TbBookService {
     private final TbBookRepository tbBookRepository;
     private final TbBookStoreService tbBookStoreService;
     private final TbNewsKeywordRepository tbNewsKeywordRepository;
+
+    // 제목 검색 (페이징 포함)
+    public Page<BookDto> searchBooksByTitle(String search, Pageable pageable) {
+        Page<TbBook> books = tbBookRepository.findByBookTitleContainingIgnoreCase(search, pageable);
+        return books.map(BookDto::new);
+    }
+
+    public Page<BookDto> getBooksByCategory(String category, Pageable pageable) {
+        Page<TbBook> books = tbBookRepository.findAllByBookCategory(category, pageable);
+        return books.map(BookDto::new); // ✅ 문제 없이 동작
+    }
 
 
     // BookDetailDto 반환 메서드 (ISBN으로 조회)

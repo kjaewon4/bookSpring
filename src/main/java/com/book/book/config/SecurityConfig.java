@@ -23,6 +23,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import java.util.List;
 
@@ -60,7 +61,7 @@ public class SecurityConfig {
                             if (path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs") || path.startsWith("/swagger-resources") || path.startsWith("/favicon.ico")) {
                                 response.setStatus(HttpServletResponse.SC_OK); // ✅ Swagger 요청은 200 OK로 응답
                             } else {
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                                response.sendRedirect("http://localhost:3000/login");
                             }
                         })
                 )// 인증 실패 시 401 응답
@@ -69,20 +70,20 @@ public class SecurityConfig {
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
 
+
         return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOriginPattern("http://localhost:3000"); // 모든 도메인 허용
-        config.addAllowedMethod("*"); // 모든 HTTP 메서드 허용
-        config.addAllowedHeader("*"); // 모든 헤더 허용
-        config.setAllowCredentials(true); // 자격 증명 허용
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // 문제 발생 가능!
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true); // 쿠키 포함
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 }
