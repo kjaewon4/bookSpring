@@ -61,6 +61,7 @@ public class TbBookController {
                     @ApiResponse(responseCode = "404", description = "해당 검색어에 해당하는 도서가 없음")
             }
     )
+
     @GetMapping("books/search")
     public ResponseEntity<?> search(
             @Parameter(description = "검색할 도서 제목", example = "그림")
@@ -112,6 +113,7 @@ public class TbBookController {
                     @ApiResponse(responseCode = "404", description = "해당 카테고리에 해당하는 도서가 없음")
             }
     )
+
     @GetMapping("books/category/{category}")
     public ResponseEntity<?> searchByCategory(
             @Parameter(description = "조회할 도서 카테고리", example = "인문과학")
