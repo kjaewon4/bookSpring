@@ -90,63 +90,63 @@ public class TbBookmarkController {
     }
 
     // 북마크 리스트
-    @Operation(
-            summary = "회원별 북마크 조회",
-            description = "회원의 UUID를 기반으로 해당 회원이 추가한 북마크 목록을 조회합니다.",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "회원 북마크 목록 반환"),
-                    @ApiResponse(responseCode = "404", description = "해당 회원을 찾을 수 없음")
-            }
-    )
-    @GetMapping("")
-    public ResponseEntity<?> getBookmarks(
-            Authentication authentication,
-            @RequestParam(defaultValue = "0") int page,   // 기본 0페이지 (첫 번째 페이지)
-            @RequestParam(defaultValue = "20") int size    // 한 페이지당 20개
-    ) {
-        // JWT에서 인증된 사용자 정보에서 userUuid 추출
-        String userUuid = (String) authentication.getPrincipal();
-
-        // uuid로 사용자의 북마크 목록을 가져오는 서비스 호출
-        System.out.println("getBookmarks uuid: " + userUuid);
-
-        // userUuid로 사용자 정보를 조회
-        Optional<TbUser> userOpt = tbUserRepository.findByUserUuid(userUuid);
-        if (!userOpt.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 사용자를 찾을 수 없습니다.");
-        }
-
-        Long userId = userOpt.get().getUserId();
-
-        // Pageable 객체 생성
-        Pageable pageable = PageRequest.of(page, size);
-
-        // user_id를 기반으로 TbBookmark를 페이지 단위로 조회
-        Page<TbBookmark> bookmarkedBooksPage = tbBookmarkRepository.findAllByUserUserId(userId, pageable);
-        System.out.println("bookmarkedBooksPage: " + bookmarkedBooksPage);
-
-        if (bookmarkedBooksPage.isEmpty()) {
-            // 페이지 정보 포함 빈 리스트 응답 (또는 필요에 따라 다른 구조로 반환)
-            return ResponseEntity.ok(Collections.emptyMap());
-        }
-
-        // TbBookmark에서 TbBook 정보를 추출하고, BookDto로 변환 (중복 제거)
-        List<TbBook> books = bookmarkedBooksPage.stream()
-                .map(TbBookmark::getBook)
-                .distinct()
-                .collect(Collectors.toList());
-
-        // List<TbBook>를 Page<TbBook>로 변환 (기존 페이지 정보 유지)
-        Page<TbBook> bookPage = new PageImpl<>(books, pageable, bookmarkedBooksPage.getTotalElements());
-
-        // Page<TbBook>를 Page<BookDto>로 변환
-        Page<BookDto> bookDtoPage = tbBookService.getBookDto(bookPage);
-
-        // PaginationService를 통해 페이징 정보를 포함한 응답 Map 생성
-        Map<String, Object> response = paginationService.createPaginatedResponse(bookDtoPage);
-
-        return ResponseEntity.ok(response);
-    }
+//    @Operation(
+//            summary = "회원별 북마크 조회",
+//            description = "회원의 UUID를 기반으로 해당 회원이 추가한 북마크 목록을 조회합니다.",
+//            responses = {
+//                    @ApiResponse(responseCode = "200", description = "회원 북마크 목록 반환"),
+//                    @ApiResponse(responseCode = "404", description = "해당 회원을 찾을 수 없음")
+//            }
+//    )
+//    @GetMapping("")
+//    public ResponseEntity<?> getBookmarks(
+//            Authentication authentication,
+//            @RequestParam(defaultValue = "0") int page,   // 기본 0페이지 (첫 번째 페이지)
+//            @RequestParam(defaultValue = "20") int size    // 한 페이지당 20개
+//    ) {
+//        // JWT에서 인증된 사용자 정보에서 userUuid 추출
+//        String userUuid = (String) authentication.getPrincipal();
+//
+//        // uuid로 사용자의 북마크 목록을 가져오는 서비스 호출
+//        System.out.println("getBookmarks uuid: " + userUuid);
+//
+//        // userUuid로 사용자 정보를 조회
+//        Optional<TbUser> userOpt = tbUserRepository.findByUserUuid(userUuid);
+//        if (!userOpt.isPresent()) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 사용자를 찾을 수 없습니다.");
+//        }
+//
+//        Long userId = userOpt.get().getUserId();
+//
+//        // Pageable 객체 생성
+//        Pageable pageable = PageRequest.of(page, size);
+//
+//        // user_id를 기반으로 TbBookmark를 페이지 단위로 조회
+//        Page<TbBookmark> bookmarkedBooksPage = tbBookmarkRepository.findAllByUserUserId(userId, pageable);
+//        System.out.println("bookmarkedBooksPage: " + bookmarkedBooksPage);
+//
+//        if (bookmarkedBooksPage.isEmpty()) {
+//            // 페이지 정보 포함 빈 리스트 응답 (또는 필요에 따라 다른 구조로 반환)
+//            return ResponseEntity.ok(Collections.emptyMap());
+//        }
+//
+//        // TbBookmark에서 TbBook 정보를 추출하고, BookDto로 변환 (중복 제거)
+//        List<TbBook> books = bookmarkedBooksPage.stream()
+//                .map(TbBookmark::getBook)
+//                .distinct()
+//                .collect(Collectors.toList());
+//
+//        // List<TbBook>를 Page<TbBook>로 변환 (기존 페이지 정보 유지)
+//        Page<TbBook> bookPage = new PageImpl<>(books, pageable, bookmarkedBooksPage.getTotalElements());
+//
+//        // Page<TbBook>를 Page<BookDto>로 변환
+//        Page<BookDto> bookDtoPage = tbBookService.getBookDto(bookPage);
+//
+//        // PaginationService를 통해 페이징 정보를 포함한 응답 Map 생성
+//        Map<String, Object> response = paginationService.createPaginatedResponse(bookDtoPage);
+//
+//        return ResponseEntity.ok(response);
+//    }
 
 
 

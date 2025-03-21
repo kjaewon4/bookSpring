@@ -94,19 +94,19 @@ public class TbBookService {
         ));
     }
 
-//
-//    public List<BookDto> getBookDto(List<TbBook> bookList) {
-//        return bookList.stream()
-//                .map(tb -> new BookDto(
-//                        tb.getBookIsbn(),
-//                        tb.getBookTitle(),
-//                        tb.getBookPublisher(),
-//                        tb.getBookAuthor(),
-//                        tb.getBookImg(),
-//                        tb.getBookDescription(),
-//                        tb.getBookCategory()))
-//                .collect(Collectors.toList());
-//    }
+
+    public List<BookDto> getBookDto(List<TbBook> bookList) {
+        return bookList.stream()
+                .map(tb -> new BookDto(
+                        tb.getBookIsbn(),
+                        tb.getBookTitle(),
+                        tb.getBookPublisher(),
+                        tb.getBookAuthor(),
+                        tb.getBookImg(),
+                        tb.getBookDescription(),
+                        tb.getBookCategory()))
+                .collect(Collectors.toList());
+    }
 //
 
     // TbBook을 조회한 후 자동으로 관련된 키워드들을 함께 가져오는 방식

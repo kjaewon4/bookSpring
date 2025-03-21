@@ -1,10 +1,16 @@
 package com.book.book.controller;
 
 
+import com.book.book.dto.BookDto;
 import com.book.book.dto.LoginRequestDto;
+import com.book.book.dto.MyPageResponseDto;
+import com.book.book.entity.TbBook;
+import com.book.book.entity.TbBookmark;
 import com.book.book.entity.TbUser;
 import com.book.book.jwt.JwtUtil;
+import com.book.book.repository.TbBookmarkRepository;
 import com.book.book.repository.TbUserRepository;
+import com.book.book.service.TbBookService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,11 +19,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -26,6 +37,9 @@ public class TbUserController {
     private final TbUserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
+    private final TbUserRepository tbUserRepository;
+    private final TbBookmarkRepository tbBookmarkRepository;
+    private final TbBookService tbBookService;
 
     @Operation(summary = "로그인", description = "로그인")
     @ResponseBody
@@ -95,5 +109,43 @@ public class TbUserController {
 
         return "회원가입이 완료되었습니다.";
     }
+
+    @GetMapping("/mypage")
+    public ResponseEntity<?> mypage(
+            Authentication authentication
+
+    ) {
+        // JWT에서 인증된 사용자 정보에서 userUuid 추출
+        String userUuid = (String) authentication.getPrincipal();
+        // userUuid로 사용자 정보를 조회
+        Optional<TbUser> userOpt = tbUserRepository.findByUserUuid(userUuid);
+        if (!userOpt.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 사용자를 찾을 수 없습니다.");
+        }
+
+        TbUser user = userOpt.get();
+        System.out.println("mypage user: " + user);
+
+        // 북마크 정보 보내기
+        Long userId = user.getUserId();
+
+        List<TbBookmark> bookmarkedBooks = tbBookmarkRepository.findAllByUserUserId(userId);
+        // TbBookmark에서 TbBook 정보를 추출하고, BookDto로 변환 (중복 제거)
+        List<TbBook> books = bookmarkedBooks.stream()
+                .map(TbBookmark::getBook)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // TbBook 리스트를 BookDto 리스트로 변환
+        List<BookDto> bookDtoList = tbBookService.getBookDto(books);
+
+        // DTO 생성: 사용자 정보와 BookDto 리스트를 통합
+        MyPageResponseDto responseDto = new MyPageResponseDto(user, bookDtoList);
+
+        // JSON으로 변환되어 클라이언트에 전달됨 (Spring Boot의 자동 변환 기능 활용)
+        return ResponseEntity.ok(responseDto);
+
+    }
+
 
 }

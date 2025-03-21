@@ -14,4 +14,5 @@ public interface TbBookmarkRepository extends JpaRepository<TbBookmark, Long> {
 
     Page<TbBookmark> findAllByUserUserId(Long userId, Pageable pageable);
 
+    List<TbBookmark> findAllByUserUserId(Long userId);
 }
