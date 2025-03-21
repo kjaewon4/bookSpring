@@ -80,36 +80,6 @@ public class TbBookService {
                             });
                 });
 
-
-
-
-        // 1) 책 정보 가져오기
-//        return Mono.justOrEmpty(tbBookRepository.findByBookIsbn(isbn))
-//                .switchIfEmpty(Mono.error(new RuntimeException(isbn + "에 해당하는 도서를 찾을 수 없습니다.")))
-//                .flatMap(tbBook -> {
-//                    // 2) BookDetailDto 생성
-//                    BookDetailDto bookDetailDto = BookDetailDto.builder()
-//                            .bookIsbn(tbBook.getBookIsbn())
-//                            .bookTitle(tbBook.getBookTitle())
-//                            .bookPublisher(tbBook.getBookPublisher())
-//                            .bookAuthor(tbBook.getBookAuthor())
-//                            .bookImg(tbBook.getBookImg())
-//                            .bookDescription(tbBook.getBookDescription())
-//                            .bookCategory(tbBook.getBookCategory())
-//                            .build();
-//
-//                    // 비동기적으로 알라딘 API에서 서점 정보 가져오기
-//                    return tbBookStoreService.fetchBookStores(isbn)
-//                            .doOnNext(bookStoreResponse -> System.out.println("bookStoreResponse 내용: " + bookStoreResponse))
-//                            .map(bookStoreResponse -> {
-//                                if (bookStoreResponse.getItemOffStoreList() != null) {
-//                                    bookDetailDto.setBookStores(bookStoreResponse.getItemOffStoreList());
-//                                } else {
-//                                    System.out.println("itemOffStoreList is null!");
-//                                }
-//                                return ResponseEntity.ok(bookDetailDto);
-//                            });
-//                });
     }
 
 

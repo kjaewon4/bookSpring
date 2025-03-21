@@ -8,7 +8,6 @@ import com.book.book.repository.TbUserRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -94,7 +93,20 @@ public class TbUserController {
 
         userRepository.save(tbUser);
 
-        return "";
+        return "회원가입이 완료되었습니다.";
     }
 
+    // 비밀번호 변경
+    @PostMapping("/change-password")
+    public String changePassword(@RequestBody TbUser tbUser) {
+        // JWT를 체크
+        // 현재 비밀번호 검증
+        // 리포지토리에서 비밀번호 업데이트
+        // JWT 유효성 갱신
+        // 비밀번호 변경시 JWT 토큰 버전 변경이나 다른 방법으로 JWT를 무효화하는 과정이 필요
+        // TbUser 엔티티에 tokenVersion이라든지 비슷한 속성이 필요
+        // 비밀번호 변경 시 기존 JWT 토큰이 만료되지 않도록, 토큰 무효화를 위한 구현이 필요. SecurityContextHolder에서 현재 사용자를 가져와 비밀번호 확인 후 업데이트하고, passwordEncoder로 새 비밀번호를 암호화한 후 userRepository로 저장
+
+        return userRepository.save(tbUser).getUserUuid();
+    }
 }

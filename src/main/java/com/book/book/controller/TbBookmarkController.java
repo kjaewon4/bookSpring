@@ -7,19 +7,21 @@ import com.book.book.entity.TbUser;
 import com.book.book.repository.TbBookRepository;
 import com.book.book.repository.TbBookmarkRepository;
 import com.book.book.repository.TbUserRepository;
+import com.book.book.service.TbBookService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -30,6 +32,7 @@ public class TbBookmarkController {
     private final TbUserRepository tbUserRepository;
     private final TbBookRepository tbBookRepository;
     private final TbBookmarkRepository tbBookmarkRepository;
+    private final TbBookService tbBookService;
 
     @Operation(
             summary = "ISBN으로 북마크 추가",
@@ -96,13 +99,16 @@ public class TbBookmarkController {
             }
     )
     @GetMapping("")
-    public ResponseEntity<?> getBookmarks(Authentication authentication) {
+    public ResponseEntity<?> getBookmarks(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,   // 기본 0페이지 (첫 번째 페이지)
+            @RequestParam(defaultValue = "20") int size    // 한 페이지당 20개
+    ) {
         // JWT에서 인증된 사용자 정보에서 userUuid 추출
         String userUuid = (String) authentication.getPrincipal();
 
         // uuid로 사용자의 북마크 목록을 가져오는 서비스 호출
         System.out.println("getBookmarks uuid: " + userUuid);
-
 
         // userUuid로 사용자 정보를 조회
         Optional<TbUser> userOpt = tbUserRepository.findByUserUuid(userUuid);
@@ -111,36 +117,36 @@ public class TbBookmarkController {
         }
 
         Long userId = userOpt.get().getUserId();
-        // user_id를 기반으로 TbBookmark를 조회
-        List<TbBookmark> bookmarkedBooks = tbBookmarkRepository.findAllByUserUserId(userId);
-        System.out.println("bookmarkedBooks: " + bookmarkedBooks);
 
-        if (bookmarkedBooks.isEmpty()) {
-            return ResponseEntity.ok(Collections.emptyList());
+        // Pageable 객체 생성
+        Pageable pageable = PageRequest.of(page, size);
+
+        // user_id를 기반으로 TbBookmark를 페이지 단위로 조회
+        Page<TbBookmark> bookmarkedBooksPage = tbBookmarkRepository.findAllByUserUserId(userId, pageable);
+        System.out.println("bookmarkedBooksPage: " + bookmarkedBooksPage);
+
+        if (bookmarkedBooksPage.isEmpty()) {
+            // 페이지 정보 포함 빈 리스트 응답 (또는 필요에 따라 다른 구조로 반환)
+            return ResponseEntity.ok(Collections.emptyMap());
         }
 
         // TbBookmark에서 TbBook 정보를 추출하고, BookDto로 변환 (중복 제거)
-        List<BookDto> bookDtos = bookmarkedBooks.stream()
+        List<TbBook> books = bookmarkedBooksPage.stream()
                 .map(TbBookmark::getBook)
-                .distinct() // TbBook의 equals/hashCode가 ISBN 기준으로 구현되어 있어야 중복 제거 가능
-                .map((TbBook book) -> {
-//                    List<String> keywords = book.getKeywords().stream()
-//                            .map(TbBookKeyword::getBookKeyword)
-//                            .collect(Collectors.toList());
-                    return new BookDto(
-                            book.getBookIsbn(),
-                            book.getBookTitle(),
-                            book.getBookPublisher(),
-                            book.getBookAuthor(),
-                            book.getBookImg(),
-                            book.getBookDescription(),
-                            book.getBookCategory()
-//                            keywords
-                    );
-                })
+                .distinct()
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(bookDtos);
+        List<BookDto> bookDtos = tbBookService.getBookDto(books);
+
+        // 페이징 정보를 포함한 응답 데이터 구성
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", bookDtos);
+        response.put("currentPage", bookmarkedBooksPage.getNumber());
+        response.put("totalPages", bookmarkedBooksPage.getTotalPages());
+        response.put("totalElements", bookmarkedBooksPage.getTotalElements());
+        response.put("numberOfElements", bookmarkedBooksPage.getNumberOfElements());
+
+        return ResponseEntity.ok(response);
     }
 
 
