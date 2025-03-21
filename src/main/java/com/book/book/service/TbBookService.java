@@ -35,7 +35,7 @@ public class TbBookService {
 
     public Page<BookDto> getBooksByCategory(String category, Pageable pageable) {
         Page<TbBook> books = tbBookRepository.findAllByBookCategory(category, pageable);
-        return books.map(BookDto::new); // ✅ 문제 없이 동작
+        return books.map(BookDto::new);
     }
 
 
@@ -82,20 +82,32 @@ public class TbBookService {
 
     }
 
-
-    public List<BookDto> getBookDto(List<TbBook> bookList) {
-        return bookList.stream()
-                .map(tb -> new BookDto(
-                        tb.getBookIsbn(),
-                        tb.getBookTitle(),
-                        tb.getBookPublisher(),
-                        tb.getBookAuthor(),
-                        tb.getBookImg(),
-                        tb.getBookDescription(),
-                        tb.getBookCategory()))
-                .collect(Collectors.toList());
+    public Page<BookDto> getBookDto(Page<TbBook> bookPage) {
+        return bookPage.map(tb -> new BookDto(
+                tb.getBookIsbn(),
+                tb.getBookTitle(),
+                tb.getBookPublisher(),
+                tb.getBookAuthor(),
+                tb.getBookImg(),
+                tb.getBookDescription(),
+                tb.getBookCategory()
+        ));
     }
 
+//
+//    public List<BookDto> getBookDto(List<TbBook> bookList) {
+//        return bookList.stream()
+//                .map(tb -> new BookDto(
+//                        tb.getBookIsbn(),
+//                        tb.getBookTitle(),
+//                        tb.getBookPublisher(),
+//                        tb.getBookAuthor(),
+//                        tb.getBookImg(),
+//                        tb.getBookDescription(),
+//                        tb.getBookCategory()))
+//                .collect(Collectors.toList());
+//    }
+//
 
     // TbBook을 조회한 후 자동으로 관련된 키워드들을 함께 가져오는 방식
     public TbBook getBookWithKeywords(String isbn) {

@@ -4,6 +4,8 @@ import com.book.book.dto.TbBookDto;
 import com.book.book.entity.TbNewsKeyword;
 import com.book.book.entity.TbRecommend;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -24,5 +26,8 @@ public interface TbRecommendRepository extends JpaRepository<TbRecommend, Long> 
 
     // 여러 뉴스 키워드에 해당하는 TbRecommend 조회
     List<TbRecommend> findByNewsKeywordIn(List<TbNewsKeyword> newsKeywords);
+
+    // 뉴스 키워드 목록에 해당하는 TbRecommend 엔티티들을 페이지 단위로 조회
+    Page<TbRecommend> findByNewsKeywordIn(List<TbNewsKeyword> newsKeywords, Pageable pageable);
 
 }

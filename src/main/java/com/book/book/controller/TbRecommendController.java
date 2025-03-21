@@ -2,23 +2,27 @@ package com.book.book.controller;
 // 책 추천 및 조회
 
 import com.book.book.dto.BookDto;
+import com.book.book.entity.TbBook;
 import com.book.book.entity.TbBookKeyword;
-import com.book.book.entity.TbNewsKeyword;
-import com.book.book.entity.TbRecommend;
 import com.book.book.repository.TbBookKeywordRepository;
-import com.book.book.repository.TbNewsKeywordRepository;
-import com.book.book.repository.TbRecommendRepository;
+import com.book.book.service.PaginationService;
+import com.book.book.service.TbBookService;
 import com.book.book.service.TbRecommendService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -28,6 +32,8 @@ public class TbRecommendController {
 
     private final TbRecommendService tbRecommendService;
     private final TbBookKeywordRepository tbBookKeywordRepository;
+    private final TbBookService tbBookService;
+    private final PaginationService paginationService;
 
     // http://localhost:8080/books/recommend/keyword/%EC%9D%B4%EB%B3%84
     // 뉴스 키워드 기반 도서 추천
@@ -43,33 +49,32 @@ public class TbRecommendController {
     @GetMapping("/keyword/{keyword}")
     public ResponseEntity<?> recommendBooksByKeyword(
             @Parameter(description = "검색할 뉴스 키워드", example = "정치")
-            @PathVariable String keyword) {
+            @PathVariable String keyword,
+            @RequestParam(defaultValue = "0") int page,   // 기본 0페이지 (첫 번째 페이지)
+            @RequestParam(defaultValue = "20") int size
+    ) {
 
-        List<TbBookKeyword> bookKeywords = tbBookKeywordRepository.findByBookKeyword(keyword);
+        // Pageable 객체 생성
+        Pageable pageable = PageRequest.of(page, size);
+        // repository 메서드를 페이지네이션 버전으로 호출
+        Page<TbBookKeyword> bookKeywordsPage = tbBookKeywordRepository.findByBookKeyword(keyword, pageable);
 
-        // TbBookKeyword에서 TbBook 추출, 중복 제거 및 BookDto 변환
-        List<BookDto> books = bookKeywords.stream()
+        // TbBookKeyword → TbBook 추출 (중복 제거)
+        List<TbBook> books = bookKeywordsPage.getContent().stream()
                 .map(TbBookKeyword::getBook)
-                .distinct()  // ISBN 기준 equals/hashCode가 올바르게 구현되어 있어야 함
-                .map(book -> {
-//                    List<String> keywords = book.getKeywords().stream()
-//                            .map(TbBookKeyword::getBookKeyword)
-//                            .collect(Collectors.toList());
-                    return new BookDto(
-                            book.getBookIsbn(),
-                            book.getBookTitle(),
-                            book.getBookPublisher(),
-                            book.getBookAuthor(),
-                            book.getBookImg(),
-                            book.getBookDescription(),
-                            book.getBookCategory()
-//                            keywords
-                    );
-                })
+                .distinct()
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(books);
+        // List<TbBook>를 Page<TbBook>로 변환 (페이지 정보 유지)
+        Page<TbBook> bookPage = new PageImpl<>(books, pageable, bookKeywordsPage.getTotalElements());
 
+        // Page<TbBook>를 Page<BookDto>로 변환 (페이지 정보 유지)
+        Page<BookDto> bookDtoPage = tbBookService.getBookDto(bookPage);
+
+        // PaginationService를 통해 페이징 정보를 포함한 응답 Map 구성
+        Map<String, Object> response = paginationService.createPaginatedResponse(bookDtoPage);
+
+        return ResponseEntity.ok(response);
     }
 
     // /books/recommend/news/date/{date}, ISO 표준 형식(예: "YYYY-MM-DD")으로 파싱되거나 포맷팅
@@ -85,14 +90,25 @@ public class TbRecommendController {
     @GetMapping("/news/date/{date}")
     public ResponseEntity<?> recommendBooksByDate(
             @Parameter(description = "검색할 날짜 (YYYY-MM-DD 형식)", example = "2025-03-17")
-            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        List<BookDto> books = tbRecommendService.getRecommendedBooksByDate(date);
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(defaultValue = "0") int page,   // 기본 0페이지 (첫 번째 페이지)
+            @RequestParam(defaultValue = "20") int size
+    ) {
 
-        if (books.isEmpty()) {
+        // Pageable 객체 생성
+        Pageable pageable = PageRequest.of(page, size);
+
+        // 서비스 메서드를 Pageable 인자를 사용하도록 호출하여 Page<BookDto>를 반환받음
+        Page<BookDto> bookDtoPage = tbRecommendService.getRecommendedBooksByDate(date, pageable);
+
+        if (bookDtoPage.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.ok(books);
+        // PaginationService를 통해 페이징 정보를 포함한 응답 Map 생성
+        Map<String, Object> response = paginationService.createPaginatedResponse(bookDtoPage);
+
+        return ResponseEntity.ok(response);
 
     }
 

@@ -7,12 +7,14 @@ import com.book.book.entity.TbUser;
 import com.book.book.repository.TbBookRepository;
 import com.book.book.repository.TbBookmarkRepository;
 import com.book.book.repository.TbUserRepository;
+import com.book.book.service.PaginationService;
 import com.book.book.service.TbBookService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -33,6 +35,7 @@ public class TbBookmarkController {
     private final TbBookRepository tbBookRepository;
     private final TbBookmarkRepository tbBookmarkRepository;
     private final TbBookService tbBookService;
+    private final PaginationService paginationService;
 
     @Operation(
             summary = "ISBN으로 북마크 추가",
@@ -68,9 +71,6 @@ public class TbBookmarkController {
 
 
         Long userId = user.get().getUserId(); // get()을 통해 TbUser 객체를 꺼내고 그 객체의 getUserId()를 호출
-        // user_id를 기반으로 TbBookmark를 조회
-        List<TbBookmark> bookmarkedBooks = tbBookmarkRepository.findAllByUserUserId(userId);
-
 
         // 중복 체크: 이미 해당 isbn 책이 북마크되어 있는지 확인
         Optional<TbBookmark> existingBookmark = tbBookmarkRepository.findByBookBookIsbnAndUserUserId(isbn, userId);
@@ -136,15 +136,14 @@ public class TbBookmarkController {
                 .distinct()
                 .collect(Collectors.toList());
 
-        List<BookDto> bookDtos = tbBookService.getBookDto(books);
+        // List<TbBook>를 Page<TbBook>로 변환 (기존 페이지 정보 유지)
+        Page<TbBook> bookPage = new PageImpl<>(books, pageable, bookmarkedBooksPage.getTotalElements());
 
-        // 페이징 정보를 포함한 응답 데이터 구성
-        Map<String, Object> response = new HashMap<>();
-        response.put("content", bookDtos);
-        response.put("currentPage", bookmarkedBooksPage.getNumber());
-        response.put("totalPages", bookmarkedBooksPage.getTotalPages());
-        response.put("totalElements", bookmarkedBooksPage.getTotalElements());
-        response.put("numberOfElements", bookmarkedBooksPage.getNumberOfElements());
+        // Page<TbBook>를 Page<BookDto>로 변환
+        Page<BookDto> bookDtoPage = tbBookService.getBookDto(bookPage);
+
+        // PaginationService를 통해 페이징 정보를 포함한 응답 Map 생성
+        Map<String, Object> response = paginationService.createPaginatedResponse(bookDtoPage);
 
         return ResponseEntity.ok(response);
     }
