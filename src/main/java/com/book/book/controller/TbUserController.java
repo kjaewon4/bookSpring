@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/user")
 public class TbUserController {
     private final TbUserRepository userRepository;
     private final PasswordEncoder passwordEncoder;

@@ -54,7 +54,9 @@ public class SecurityConfig {
 //                        .requestMatchers("/**").permitAll()
                         .requestMatchers("/login", "/signup", "/favicon.ico").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
-                        .anyRequest().authenticated()) // 나머지는 인증 필요
+                        .requestMatchers("/mypage").authenticated() // ✅ /mypage만 인증
+                        .anyRequest().permitAll()) // ✅ 나머지는 모두 허용) // 나머지는 인증 필요
+
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> {
                             String path = request.getRequestURI();

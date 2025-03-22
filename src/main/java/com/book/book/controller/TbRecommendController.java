@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/books/recommend")
+@RequestMapping("/recommend")
 @RequiredArgsConstructor
 public class TbRecommendController {
 
