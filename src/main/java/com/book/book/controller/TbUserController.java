@@ -111,6 +111,40 @@ public class TbUserController {
         return "회원가입이 완료되었습니다.";
     }
 
+    @Operation(summary = "로그인 상태 확인", description = "현재 사용자가 로그인했는지 확인합니다.")
+    @PostMapping("/status")
+    public ResponseEntity<?> checkLoginStatus(
+            @CookieValue(name = "jwt", required = false) String jwtToken
+    ) {
+        // JWT 쿠키가 없다면 로그인되지 않은 상태
+        if (jwtToken == null || jwtToken.isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "로그인되어 있지 않습니다."));
+        }
+
+        // 토큰에서 사용자 UUID 추출
+        String userUuid;
+        try {
+            userUuid = JwtUtil.getUserUuidFromToken(jwtToken);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "유효하지 않은 토큰입니다."));
+        }
+
+        // 실제 사용자 존재 여부 확인 (DB 기준)
+        Optional<TbUser> userOpt = tbUserRepository.findByUserUuid(userUuid);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "존재하지 않는 사용자입니다."));
+        }
+
+        // 로그인된 사용자 정보 응답
+        return ResponseEntity.ok(Map.of(
+                "message", "로그인 상태입니다.",
+                "userUuid", userUuid
+        ));
+    }
+
 //    @GetMapping("/mypage")
 //    public ResponseEntity<?> mypage(
 //            Authentication authentication

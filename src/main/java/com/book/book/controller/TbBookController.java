@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Parameter;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -36,24 +37,20 @@ public class TbBookController {
             }
     )
     @GetMapping("")
-    public  ResponseEntity<?> home(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        LocalDate today = LocalDate.now(); // 오늘 날짜 가져오기
-        Pageable pageable = PageRequest.of(page, size);
+    public ResponseEntity<?> home() {
+        LocalDate today = LocalDate.now();
 
-        // Page<BookDto>를 반환하도록 호출
-        Page<BookDto> bookPage = tbRecommendService.getRecommendedBooksByDate(today, pageable);
+        // 이제는 Page가 아닌 List로 받기
+        List<BookDto> books = tbRecommendService.getRecommendedBooksInMain(today);
 
-        if (bookPage.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        if (books.isEmpty()) {
+            return ResponseEntity.noContent().build(); // 204 No Content
         }
 
-        // PaginationService를 사용하여 페이징 정보가 포함된 응답 Map 구성
-        Map<String, Object> response = paginationService.createPaginatedResponse(bookPage);
-
-        return ResponseEntity.ok(response);
+        // 리스트 그대로 반환
+        return ResponseEntity.ok(books);
     }
+
 
     // http://localhost:8080/books/search?search=검색어, 도서 검색(제목) - 검색창 사용
     // full text index (n-gram parser 이용)쓸거임
