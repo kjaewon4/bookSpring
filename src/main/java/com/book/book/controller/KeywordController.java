@@ -15,7 +15,7 @@ import java.util.List;
 public class KeywordController {
     private final TbNewsKeywordRepository tbNewsKeywordRepository;
 
-    @GetMapping("/keywords/news")
+    @GetMapping("/api/keywords/news")
     public ResponseEntity<List<TbNewsKeyword>> news() {
         LocalDate today = LocalDate.now();
         List<TbNewsKeyword> newsList = tbNewsKeywordRepository.findAllByNewsDate(today);

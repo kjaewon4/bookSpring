@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/user")
+@RequestMapping("/api/user")
 public class TbUserController {
     private final TbUserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -111,42 +111,42 @@ public class TbUserController {
         return "회원가입이 완료되었습니다.";
     }
 
-    @GetMapping("/mypage")
-    public ResponseEntity<?> mypage(
-            Authentication authentication
-
-    ) {
-        // JWT에서 인증된 사용자 정보에서 userUuid 추출
-        String userUuid = (String) authentication.getPrincipal();
-        // userUuid로 사용자 정보를 조회
-        Optional<TbUser> userOpt = tbUserRepository.findByUserUuid(userUuid);
-        if (!userOpt.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 사용자를 찾을 수 없습니다.");
-        }
-
-        TbUser user = userOpt.get();
-        System.out.println("mypage user: " + user);
-
-        // 북마크 정보 보내기
-        Long userId = user.getUserId();
-
-        List<TbBookmark> bookmarkedBooks = tbBookmarkRepository.findAllByUserUserId(userId);
-        // TbBookmark에서 TbBook 정보를 추출하고, BookDto로 변환 (중복 제거)
-        List<TbBook> books = bookmarkedBooks.stream()
-                .map(TbBookmark::getBook)
-                .distinct()
-                .collect(Collectors.toList());
-
-        // TbBook 리스트를 BookDto 리스트로 변환
-        List<BookDto> bookDtoList = tbBookService.getBookDto(books);
-
-        // DTO 생성: 사용자 정보와 BookDto 리스트를 통합
-        MyPageResponseDto responseDto = new MyPageResponseDto(user, bookDtoList);
-
-        // JSON으로 변환되어 클라이언트에 전달됨 (Spring Boot의 자동 변환 기능 활용)
-        return ResponseEntity.ok(responseDto);
-
-    }
+//    @GetMapping("/mypage")
+//    public ResponseEntity<?> mypage(
+//            Authentication authentication
+//
+//    ) {
+//        // JWT에서 인증된 사용자 정보에서 userUuid 추출
+//        String userUuid = (String) authentication.getPrincipal();
+//        // userUuid로 사용자 정보를 조회
+//        Optional<TbUser> userOpt = tbUserRepository.findByUserUuid(userUuid);
+//        if (!userOpt.isPresent()) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 사용자를 찾을 수 없습니다.");
+//        }
+//
+//        TbUser user = userOpt.get();
+//        System.out.println("mypage user: " + user);
+//
+//        // 북마크 정보 보내기
+//        Long userId = user.getUserId();
+//
+//        List<TbBookmark> bookmarkedBooks = tbBookmarkRepository.findAllByUserUserId(userId);
+//        // TbBookmark에서 TbBook 정보를 추출하고, BookDto로 변환 (중복 제거)
+//        List<TbBook> books = bookmarkedBooks.stream()
+//                .map(TbBookmark::getBook)
+//                .distinct()
+//                .collect(Collectors.toList());
+//
+//        // TbBook 리스트를 BookDto 리스트로 변환
+//        List<BookDto> bookDtoList = tbBookService.getBookDto(books);
+//
+//        // DTO 생성: 사용자 정보와 BookDto 리스트를 통합
+//        MyPageResponseDto responseDto = new MyPageResponseDto(user, bookDtoList);
+//
+//        // JSON으로 변환되어 클라이언트에 전달됨 (Spring Boot의 자동 변환 기능 활용)
+//        return ResponseEntity.ok(responseDto);
+//
+//    }
 
 
 }
