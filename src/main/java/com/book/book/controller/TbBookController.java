@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/books")
 public class TbBookController {
     private final TbBookService tbBookService;
     private final TbBookRepository tbBookRepository;
@@ -62,7 +63,7 @@ public class TbBookController {
             }
     )
 
-    @GetMapping("books/search")
+    @GetMapping("/search")
     public ResponseEntity<?> search(
             @Parameter(description = "검색할 도서 제목", example = "그림")
             @RequestParam(name = "search") String search,
@@ -114,7 +115,7 @@ public class TbBookController {
             }
     )
 
-    @GetMapping("books/category/{category}")
+    @GetMapping("/category/{category}")
     public ResponseEntity<?> searchByCategory(
             @Parameter(description = "조회할 도서 카테고리", example = "인문과학")
             @PathVariable(name = "category") String category,

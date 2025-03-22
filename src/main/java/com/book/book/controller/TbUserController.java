@@ -22,6 +22,7 @@ import java.util.Map;
 
 
 @RestController
+@RequestMapping("/api/user")
 @RequiredArgsConstructor
 public class TbUserController {
     private final TbUserRepository userRepository;

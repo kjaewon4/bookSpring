@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/books/recommend")
+@RequestMapping("/api/recommend")
 @RequiredArgsConstructor
 public class TbRecommendController {
 

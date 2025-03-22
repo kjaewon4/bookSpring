@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/bookmarks")
+@RequestMapping("/api/bookmarks")
 public class TbBookmarkController {
     private final TbUserRepository tbUserRepository;
     private final TbBookRepository tbBookRepository;
