@@ -25,4 +25,6 @@ public interface TbBookRepository extends JpaRepository<TbBook, Integer> {
 
     // 카테고리별 조회 - 페이징 적용
     Page<TbBook> findAllByBookCategory(String category, Pageable pageable);
+
+    Page<TbBook> findByBookIsbnIn(List<String> isbnList, Pageable pageable);
 }

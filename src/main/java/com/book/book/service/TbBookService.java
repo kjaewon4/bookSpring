@@ -123,4 +123,10 @@ public class TbBookService {
         return tbBook;  // `tbBook` 객체는 이미 `keywords`를 포함하고 있음
 
     }
+
+    public Page<BookDto> getBooksByIsbnList(List<String> isbnList, Pageable pageable) {
+        Page<TbBook> bookPage = tbBookRepository.findByBookIsbnIn(isbnList, pageable);
+        return getBookDto(bookPage);
+    }
+
 }

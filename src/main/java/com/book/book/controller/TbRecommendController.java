@@ -5,6 +5,7 @@ import com.book.book.dto.BookDto;
 import com.book.book.entity.TbBook;
 import com.book.book.entity.TbBookKeyword;
 import com.book.book.repository.TbBookKeywordRepository;
+import com.book.book.repository.TbNewsKeywordRepository;
 import com.book.book.service.PaginationService;
 import com.book.book.service.TbBookService;
 import com.book.book.service.TbRecommendService;
@@ -34,6 +35,7 @@ public class TbRecommendController {
     private final TbBookKeywordRepository tbBookKeywordRepository;
     private final TbBookService tbBookService;
     private final PaginationService paginationService;
+    private final TbNewsKeywordRepository tbNewsKeywordRepository;
 
     // http://localhost:8080/books/recommend/keyword/%EC%9D%B4%EB%B3%84
     // 뉴스 키워드 기반 도서 추천
@@ -110,6 +112,31 @@ public class TbRecommendController {
 
         return ResponseEntity.ok(response);
 
+    }
+
+    @Operation(
+            summary = "뉴스 카테고리 기반 도서 추천",
+            description = "뉴스 카테고리에 해당하는 키워드 기반 추천 도서를 페이징 형태로 반환합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "추천 도서 반환"),
+                    @ApiResponse(responseCode = "404", description = "추천 도서 없음")
+            }
+    )
+    @GetMapping("/category/{category}")
+    public ResponseEntity<?> recommendBooksByCategory(
+            @PathVariable String category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<BookDto> bookDtoPage = tbRecommendService.getRecommendedBooksByNewsCategory(category, pageable);
+
+        if (bookDtoPage.isEmpty()) {
+            return ResponseEntity.status(404).body("추천 도서가 없습니다.");
+        }
+
+        Map<String, Object> response = paginationService.createPaginatedResponse(bookDtoPage);
+        return ResponseEntity.ok(response);
     }
 
 }

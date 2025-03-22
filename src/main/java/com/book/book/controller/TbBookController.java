@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Parameter;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Map;
 
 @RestController

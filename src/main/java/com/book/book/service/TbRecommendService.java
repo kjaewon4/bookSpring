@@ -104,4 +104,30 @@ public class TbRecommendService {
 //
 //        return books;
     }
+
+    public Page<BookDto> getRecommendedBooksByNewsCategory(String category, Pageable pageable) {
+        // 1. 뉴스 키워드 조회
+        List<TbNewsKeyword> newsKeywords = tbNewsKeywordRepository.findByNewsCategory(category);
+        if (newsKeywords.isEmpty()) return Page.empty();
+
+        // 2. 추천 도서 조회
+        List<TbRecommend> recommends = tbRecommendRepository.findByNewsKeywordIn(newsKeywords);
+        if (recommends.isEmpty()) return Page.empty();
+
+        // 3. 도서 중복 제거
+        List<TbBook> books = recommends.stream()
+                .map(TbRecommend::getBook)
+                .distinct()
+                .toList();
+
+        // 4. 수동 페이징 처리
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), books.size());
+        List<TbBook> pageContent = books.subList(start, end);
+        Page<TbBook> bookPage = new PageImpl<>(pageContent, pageable, books.size());
+
+        // 5. DTO 변환
+        return tbBookService.getBookDto(bookPage);
+    }
+
 }
