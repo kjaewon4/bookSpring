@@ -37,57 +37,55 @@ public class TbBookmarkController {
     private final TbBookService tbBookService;
     private final PaginationService paginationService;
 
+
     @Operation(
             summary = "ISBN으로 북마크 추가",
-            description = "사용자가 특정 ISBN의 책을 북마크에 추가합니다. 요청 본문에 회원 UUID가 필요합니다.",
+            description = "사용자가 특정 ISBN의 책을 북마크에 추가합니다. 요청 본문에 ISBN 문자열만 전달받습니다. (예: \"9788920930720\")",
             responses = {
-        @ApiResponse(responseCode = "200", description = "북마크 추가 성공"),
-        @ApiResponse(responseCode = "401", description = "로그인이 필요함"),
-    })
-    @PostMapping("{isbn}")
+                    @ApiResponse(responseCode = "200", description = "북마크 추가 성공"),
+                    @ApiResponse(responseCode = "401", description = "로그인이 필요함"),
+            }
+    )
+    @PostMapping("/isbn")
     public ResponseEntity<?> addBookMark(
-            @Parameter(description = "북마크할 도서의 ISBN 번호", example = "9788920930720")
-            @PathVariable("isbn") String isbn,
+            @RequestBody String isbn,
             Authentication authentication
     ) {
-
-        // SecurityContextHolder에 저장된 principal을 가져옵니다.
+        // 사용자 인증 정보 확인
         String userUuid = (String) authentication.getPrincipal();
-
-        System.out.println("addBookMark userUuid: " + userUuid);
-
         if (userUuid == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
         }
 
-        TbBook book = tbBookRepository.findByBookIsbn(isbn)
-                .orElseThrow(() -> new RuntimeException(isbn + "에 해당하는 도서를 찾을 수 없습니다."));
+        // JSON 문자열로 들어온 ISBN에서 따옴표 제거
+        final String cleanIsbn = isbn.replaceAll("\"", "").trim();
 
-        Optional<TbUser> user = tbUserRepository.findByUserUuid(userUuid);
-        if (user.isEmpty()) {
-            return ResponseEntity.badRequest().body("해당 사용자가 존재하지 않습니다.");
-        }
-        System.out.println("addBookMark user.get(): " + user.get());
+        // 도서 조회
+        TbBook book = tbBookRepository.findByBookIsbn(cleanIsbn)
+                .orElseThrow(() -> new RuntimeException(cleanIsbn + "에 해당하는 도서를 찾을 수 없습니다."));
 
+        // 사용자 조회
+        TbUser user = tbUserRepository.findByUserUuid(userUuid)
+                .orElseThrow(() -> new RuntimeException("해당 사용자가 존재하지 않습니다."));
 
-        Long userId = user.get().getUserId(); // get()을 통해 TbUser 객체를 꺼내고 그 객체의 getUserId()를 호출
+        Long userId = user.getUserId();
 
-        // 중복 체크: 이미 해당 isbn 책이 북마크되어 있는지 확인
-        Optional<TbBookmark> existingBookmark = tbBookmarkRepository.findByBookBookIsbnAndUserUserId(isbn, userId);
-        if (existingBookmark.isPresent()) {
-            // 이미 북마크된 책이 있으면 중복 처리
+        // 중복 북마크 체크
+        boolean isAlreadyBookmarked = tbBookmarkRepository.findByBookBookIsbnAndUserUserId(cleanIsbn, userId).isPresent();
+        if (isAlreadyBookmarked) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("이미 북마크된 책입니다.");
         }
 
+        // 북마크 저장
         TbBookmark bookmark = new TbBookmark();
         bookmark.setBook(book);
-        bookmark.setUser(user.get());
+        bookmark.setUser(user);
         tbBookmarkRepository.save(bookmark);
-
-        System.out.println("addBookMark user: " + bookmark);
 
         return ResponseEntity.ok("북마크에 추가되었습니다.");
     }
+
+
 
     // 북마크 리스트
     @Operation(

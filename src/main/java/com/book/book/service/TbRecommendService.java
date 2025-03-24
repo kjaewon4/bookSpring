@@ -16,7 +16,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -129,5 +131,30 @@ public class TbRecommendService {
         // 5. DTO 변환
         return tbBookService.getBookDto(bookPage);
     }
+
+    public List<BookDto> getRecommendedBooksInMain(LocalDate date) {
+        // 1. 해당 날짜의 뉴스 키워드 조회
+        List<TbNewsKeyword> newsList = tbNewsKeywordRepository.findAllByNewsDate(date);
+        if (newsList == null || newsList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 2. 뉴스 키워드를 기준으로 추천 도서 조회 (페이징 없이 전체 조회로 변경)
+        List<TbRecommend> recommendations = tbRecommendRepository.findAllByNewsKeywordIn(newsList);
+        if (recommendations == null || recommendations.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 3. 추천 항목에서 책 추출하고 중복 제거
+        List<TbBook> bookList = recommendations.stream()
+                .map(TbRecommend::getBook)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 4. TbBook → BookDto 변환
+        return tbBookService.getBookDto(bookList);
+    }
+
 
 }
