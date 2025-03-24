@@ -30,4 +30,6 @@ public interface TbRecommendRepository extends JpaRepository<TbRecommend, Long> 
 
     // 뉴스 키워드 목록에 해당하는 TbRecommend 엔티티들을 페이지 단위로 조회
     Page<TbRecommend> findByNewsKeywordIn(List<TbNewsKeyword> newsKeywords, Pageable pageable);
+
+    List<TbRecommend> findAllByNewsKeywordIn(List<TbNewsKeyword> newsList);
 }
