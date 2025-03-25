@@ -125,6 +125,11 @@ public class TbRecommendService {
         // 4. 수동 페이징 처리
         int start = (int) pageable.getOffset();
         int end = Math.min(start + pageable.getPageSize(), books.size());
+
+        if (start >= books.size()) {
+            return Page.empty();
+        }
+
         List<TbBook> pageContent = books.subList(start, end);
         Page<TbBook> bookPage = new PageImpl<>(pageContent, pageable, books.size());
 

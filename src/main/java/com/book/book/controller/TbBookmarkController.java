@@ -96,6 +96,10 @@ public class TbBookmarkController {
     )
     @GetMapping("")
     public ResponseEntity<?> getBookmarks(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
         // 인증된 사용자 UUID 가져오기
         String userUuid = (String) authentication.getPrincipal();
         System.out.println("getBookmarks uuid: " + userUuid);

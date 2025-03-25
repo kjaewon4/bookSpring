@@ -17,7 +17,7 @@ public class PythonExecutor {
             System.out.println("✅ Spring Boot 실행 완료! Python 실행 시작...");
 
             // 실행할 파이썬 파일 경로
-            String pythonFilePath = "\"C:\\study\\workspace\\project\\main.py";
+            String pythonFilePath = "C:\\Users\\jaewo\\workspace\\BOOK\\projectApi-master\\project\\main.py";
 
             // Python 실행
             ProcessBuilder processBuilder = new ProcessBuilder("python", pythonFilePath);

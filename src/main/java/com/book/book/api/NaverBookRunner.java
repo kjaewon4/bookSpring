@@ -6,6 +6,7 @@ import com.book.book.entity.TbBook;
 import com.book.book.repository.TbBookRepository;
 import com.book.book.service.LibraryApiService;
 import com.book.book.service.NaverBookService;
+import com.book.book.service.TbBookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -20,16 +21,20 @@ public class NaverBookRunner implements CommandLineRunner {
     private final LibraryApiService libraryApiService;
     private final NaverBookService naverBookService;
     private final TbBookRepository tbBookRepository;
+    private final TbBookService tbBookService;
 
     @Autowired
-    public NaverBookRunner(NaverBookService naverBookService, TbBookRepository tbBookRepository, LibraryApiService libraryApiService) {
+    public NaverBookRunner(NaverBookService naverBookService, TbBookRepository tbBookRepository, LibraryApiService libraryApiService, TbBookService tbBookService) {
         this.naverBookService = naverBookService;
         this.tbBookRepository = tbBookRepository;
         this.libraryApiService = libraryApiService;
+        this.tbBookService = tbBookService;
     }
 
     @Override
     public void run(String... args) {
+        tbBookService.saveBooks();
+
         // Library API에서 recomisbn 목록을 동기적으로 가져옴
         List<IsbnWithCategoryDto> isbnWithCategoryDtoList = libraryApiService.getRecomisbn().block();
 
