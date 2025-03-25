@@ -129,4 +129,10 @@ public class TbBookService {
         return getBookDto(bookPage);
     }
 
+    public Page<BookDto> getAllBooks(Pageable pageable) {
+        Page<TbBook> bookPage = tbBookRepository.findAll(pageable);
+        return getBookDto(bookPage);
+    }
+
+
 }

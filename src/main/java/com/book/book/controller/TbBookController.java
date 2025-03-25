@@ -36,7 +36,7 @@ public class TbBookController {
                     @ApiResponse(responseCode = "404", description = "추천 도서가 없음")
             }
     )
-    @GetMapping("")
+    @GetMapping("/recommend")
     public ResponseEntity<?> home() {
         LocalDate today = LocalDate.now();
 
@@ -49,6 +49,25 @@ public class TbBookController {
 
         // 리스트 그대로 반환
         return ResponseEntity.ok(books);
+    }
+
+    @GetMapping("")
+    public ResponseEntity<?> bookList(
+            @RequestParam(defaultValue = "0") int page,   // 기본 0페이지 (첫 번째 페이지)
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<BookDto> bookDtoPage = tbBookService.getAllBooks(pageable);
+
+        if (bookDtoPage.isEmpty()) {
+            return ResponseEntity.noContent().build(); // 204 No Content
+        }
+
+        // 페이징 응답 구성 (예: totalPages, currentPage 등 포함)
+        Map<String, Object> response = paginationService.createPaginatedResponse(bookDtoPage);
+
+        return ResponseEntity.ok(response);
     }
 
 
